@@ -1,0 +1,45 @@
+{
+  "name": "my-app",
+  "version": "0.1.0",
+  "description": "File Tag Management",
+  "main": "main.js",
+  "author": "Sadeq",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@types/better-sqlite3": "^5.4.1",
+    "@types/electron-devtools-installer": "^2.2.0",
+    "@types/node": "^14.14.28",
+    "@types/react": "^17.0.2",
+    "clean-webpack-plugin": "^3.0.0",
+    "css-loader": "^5.0.2",
+    "electron": "^12.0.2",
+    "electron-devtools-installer": "^3.1.1",
+    "electron-rebuild": "^2.3.5",
+    "html-webpack-plugin": "^5.1.0",
+    "style-loader": "^2.0.0",
+    "ts-loader": "^8.0.17",
+    "typescript": "^4.1.5",
+    "webpack": "^5.22.0",
+    "webpack-cli": "^4.5.0",
+    "webpack-dev-server": "^3.11.2"
+  },
+  "scripts": {
+    "after-install-native": "electron-rebuild",
+    "build:main": "tsc --project ./configs/main/tsconfig.dev.json",
+    "build:renderer": "webpack --config ./configs/renderer/webpack.config.js",
+    "run:main-deprecated": "yarn build:main && electron --inspect ./dist/main/main.js",
+    "run:main": "electron mainRunner.js --inspect",
+    "run:renderer": "webpack serve --config ./configs/renderer/webpack.hot.js",
+    "watch:renderer": "webpack --config ./configs/renderer/webpack.watch.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^7.1.2",
+    "primeicons": "^4.1.0",
+    "primereact": "^6.0.2",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-transition-group": "^4.4.1",
+    "ts-node": "^9.1.1"
+  }
+}

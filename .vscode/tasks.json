@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "npm",
+            "script": "watch:renderer",
+            "group": "build",
+            "problemMatcher": "$tsc-watch",
+            "label": "npm: watch:renderer",
+            "detail": "webpack --config ./configs/renderer/webpack.watch.js",
+            "isBackground": true
+        }
+    ]
+}
