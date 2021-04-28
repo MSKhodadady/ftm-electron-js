@@ -1,6 +1,7 @@
-.display-none {
-    display: none;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 html, body {
     width: 100%;
@@ -13,57 +14,6 @@ html, body {
     margin: 0;
 }
 
-.app-root {
-    width: auto;
-    height: auto;
-    margin: 0;
-
-    display: grid;
-    grid-template-columns: auto;
-    gap: 10px;
-
-    padding: 10px;
-}
-
-.choose-file-div {
-    display: grid;
-    grid-template-columns: 200px auto;
-    width: 100%;
-    column-gap: 10px;
-}
-
-.file-input {
-    width: 100%;
-}
-
 .tag-input > ul {
-    width: 100%;
-}
-
-.file-option .image {
-    width: 300px;
-    width: 300px;
-}
-
-/* driver choose */
-.driver-choose > div{
-    float: left;
-    padding: 5px;
-
-    display: flex;
-    align-items: center;
-}
-
-.driver-choose > div > .label {
-    padding-left: 10px;
-    display: inline-block;
-}
-
-.driver-choose > div > .label > span {
-    display: block;
-}
-/* ---------------- */
-
-.move-file-checkbox > label{
-    margin-left: 10px;
+    @apply w-full
 }

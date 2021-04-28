@@ -1,46 +1,12 @@
 
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, globalShortcut } from "electron";
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import path from 'path';
 
 //: pre run configs
 import './lib/preRunConfig';
 
-/* async function createWindow () {
-  const win = new BrowserWindow({
-    // width: 100,
-    // height: 100,
-    webPreferences: {
-      nodeIntegration: true,
-      devTools: true
-    }
-  });
-
-  win.loadFile(path.resolve('.', 'dist', 'renderer', 'index.html'));
-
-  // win.maximize();
-
-  // const reactDevToolExtensionPath = '/home/sadeq/.config/google-chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi'
-  // await session.defaultSession.loadExtension(reactDevToolExtensionPath);
-  // installExtension(REACT_DEVELOPER_TOOLS).then(name => console.log(`extension added: ${name}`))
-  //   .catch(err => `error adding 'react devtool extension, err: ${err}`);
-}
-
-app.whenReady().then(createWindow);
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-}); */
-
-function createWindow () {
+function createWindow() {
   const win = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true,
@@ -48,7 +14,20 @@ function createWindow () {
     }
   });
 
-  win.loadFile(path.resolve('.', 'dist', 'renderer', 'index.html'));
+  //: TODO: load this file in production
+  // win.loadFile(path.resolve('.', 'dist', 'renderer', 'index.html'));
+  win.loadURL('http://localhost:8080/');
+
+  win.maximize();
+
+  //: load extension, old way
+  // const reactDevToolExtensionPath = 
+  //  '/home/sadeq/.config/google-chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi';
+  // await session.defaultSession.loadExtension(reactDevToolExtensionPath);
+
+  //: load extension
+  installExtension(REACT_DEVELOPER_TOOLS).then(name => console.log(`extension added: ${name}`))
+    .catch(err => `error adding 'react devtool extension, err: ${err}`);
 }
 
 app.whenReady().then(() => {
@@ -58,6 +37,20 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0)
       createWindow();
   });
+
+  //: hot reload handlers module {
+  //: TODO: this code is just for development!
+  const reloadKeyboardKey = 'CmdOrCtrl+Shift+S'
+  const ret = globalShortcut.register(reloadKeyboardKey, () => {
+    console.log(reloadKeyboardKey + ' pressed, handlers module reloaded!');
+    //: remove the module from cache
+    delete require.cache[require.resolve('./lib/handlers.ts')];
+    //: reload module
+    require('./lib/handlers');
+  });
+  if (!ret) console.error(reloadKeyboardKey + ' not registered!');
+  else console.log(reloadKeyboardKey + ' registered!');
+  //: }
 });
 
 app.on('window-all-closed', () => {
@@ -66,4 +59,4 @@ app.on('window-all-closed', () => {
 });
 
 //: handlers
-import './lib/handlers';
+require('./lib/handlers');
