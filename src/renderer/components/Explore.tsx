@@ -12,21 +12,33 @@ interface Props {
 
 interface FileTag { fileName: string, tagList: string[] }
 
-const FileItem = ({ fileTagged: { fileName, tagList }, selectedDriver }: { fileTagged: FileTag, selectedDriver: Driver }) => (
-  <div className="flex shadow-md rounded-md w-full p-0 mb-2">
-    <div className="bg-gray-200 mr-2 h-auto rounded-l-md p-3 cursor-pointer" onClick={e => {
-      ipcRenderer.invoke('open-file', selectedDriver, fileName).then(err => {
-        console.log(err);
-      });
-    }}>
-      <span className="pi pi-image" />
+const FileItem = ({ fileTagged: { fileName, tagList }, selectedDriver }: { fileTagged: FileTag, selectedDriver: Driver }) => {
+
+  const openFile = e => {
+    ipcRenderer.invoke('open-file', selectedDriver, fileName).then(err => {
+      console.log(err);
+    });
+  };
+
+  return (
+    <div
+      className="flex shadow-md rounded-md w-full p-0 mb-2 file-row">
+      <div className="bg-gray-200 mr-2 h-auto rounded-l-md p-3 cursor-pointer" onClick={openFile}>
+        <span className="pi pi-image" />
+      </div>
+      <div className="w-full flex items-center my-3">
+        <div className="flex items-center w-1/2">
+          <div className="mr-2">{fileName}</div>
+          {tagList.map(v => <Chip className="mr-2" label={v} key={v} />)}
+        </div>
+        <div
+          className="w-1/2 flex flex-row-reverse mx-3 details hidden">
+          <span className="pi pi-trash cursor-pointer" />
+        </div>
+      </div>
     </div>
-    <div className="flex items-center my-3">
-      <div className="mr-2">{fileName}</div>
-      {tagList.map(v => <Chip className="mr-2" label={v} key={v} />)}
-    </div>
-  </div>
-);
+  );
+}
 
 export const Explore = ({ selectedDriver }: Props) => {
   if (selectedDriver == null) return <div className="p-3 bg-yellow-300 w-full h-12 text-center" >Please select driver!</div>;

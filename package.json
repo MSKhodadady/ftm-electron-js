@@ -2,9 +2,7 @@
   "name": "my-app",
   "version": "0.1.0",
   "description": "File Tag Management",
-  "main": "main.js",
   "author": "Sadeq",
-  "license": "MIT",
   "private": true,
   "devDependencies": {
     "@types/better-sqlite3": "^5.4.1",
@@ -18,6 +16,7 @@
     "electron-devtools-installer": "^3.1.1",
     "electron-rebuild": "^2.3.5",
     "html-webpack-plugin": "^5.1.0",
+    "parcel": "^2.0.0-beta.2",
     "postcss": "^8.2.12",
     "postcss-loader": "^5.2.0",
     "style-loader": "^2.0.0",
@@ -30,12 +29,10 @@
   },
   "scripts": {
     "after-install-native": "electron-rebuild -f",
-    "DEP-build:main": "tsc --project ./configs/main/tsconfig.dev.json",
     "build:renderer": "webpack --config ./configs/renderer/webpack.config.js",
-    "DEP-run:main": "yarn build:main && electron --inspect ./dist/main/main.js",
     "run:main": "electron mainRunner.js --inspect",
     "run:renderer": "webpack serve --config ./configs/renderer/webpack.hot.js",
-    "DEP-watch:renderer": "webpack --config ./configs/renderer/webpack.watch.js"
+    "parcel:serve": "parcel serve ./src/renderer/main.html --target app"
   },
   "dependencies": {
     "better-sqlite3": "^7.1.2",
@@ -46,5 +43,11 @@
     "react-dom": "^17.0.1",
     "react-transition-group": "^4.4.1",
     "ts-node": "^9.1.1"
+  },
+  "targets": {
+    "app": {
+      "context": "electron-renderer",
+      "distDir": "dist/renderer"
+    }
   }
 }

@@ -15,8 +15,9 @@ function createWindow() {
   });
 
   //: TODO: load this file in production
-  // win.loadFile(path.resolve('.', 'dist', 'renderer', 'index.html'));
-  win.loadURL('http://localhost:8080/');
+  // win.loadFile(path.resolve('.', 'dist', 'renderer', 'main.html'));
+  // win.loadURL('http://localhost:8080/');
+  win.loadURL('http://localhost:1234/');
 
   win.maximize();
 
