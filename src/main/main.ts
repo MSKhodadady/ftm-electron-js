@@ -21,11 +21,6 @@ function createWindow() {
 
   win.maximize();
 
-  //: load extension, old way
-  // const reactDevToolExtensionPath = 
-  //  '/home/sadeq/.config/google-chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi';
-  // await session.defaultSession.loadExtension(reactDevToolExtensionPath);
-
   //: load extension
   installExtension(REACT_DEVELOPER_TOOLS).then(name => console.log(`extension added: ${name}`))
     .catch(err => `error adding 'react devtool extension, err: ${err}`);

@@ -71,18 +71,23 @@ const handlersList: any = [
   ['test', e => 'I came back'],
 
   ['files-list', (e, selectedDriver: Driver) => {
-    try {
-      const db = getDB(selectedDriver);
-      const query = `SELECT file_name, tag_name FROM file_tag;`;
-      return db.prepare(query).all();
-    } catch (error) {
-      console.log(error);
-      return error;
-    }
+    return getDB(selectedDriver).prepare(`SELECT file_name, tag_name FROM file_tag;`).all();
   }],
 
   ['open-file',
-    (e, selectedDriver: Driver, fileName: string) => shell.openPath(selectedDriver.path + '/' + fileName)]
+    (e, selectedDriver: Driver, fileName: string) => shell.openPath(selectedDriver.path + '/' + fileName)],
+
+  ['rename-file',
+    async (e, selectedDriver: Driver, oldFileName: string, newFileName: string) => {
+      await fs.promises.rename(
+        path.resolve(selectedDriver.path, oldFileName),
+        path.resolve(selectedDriver.path, newFileName)
+      );
+
+      getDB(selectedDriver).prepare(
+        `UPDATE file_tag SET file_name ='${newFileName}' WHERE file_name='${oldFileName}';`
+      ).run();
+    }]
 ];
 
 //: register all handlers
