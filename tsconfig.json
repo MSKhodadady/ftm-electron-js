@@ -8,11 +8,21 @@
         "moduleResolution": "node",
         "esModuleInterop": true
     },
-
     "typeAcquisition": {
-        "exclude": ["webpack"],
+        "exclude": [
+            "webpack"
+        ],
         "enable": false
     },
-
-    "exclude": ["./src/main"]
+    "include": [
+        "./src/common/**/*",
+        "./src/renderer/**/*"
+    ],
+    "exclude": [
+        "./src/main/**/*",
+        "./configs/**/*",
+        "./node_modules/**/*",
+        "./dist/**/*",
+        "./mainRunner.js"
+    ]
 }

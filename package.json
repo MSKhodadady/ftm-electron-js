@@ -47,7 +47,10 @@
   "targets": {
     "app": {
       "context": "electron-renderer",
-      "distDir": "dist/renderer"
+      "distDir": "dist/renderer",
+      "sourceMap": {
+        "inline": true
+      }
     }
   }
 }

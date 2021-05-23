@@ -15,9 +15,14 @@ import "../../node_modules/primeflex/primeflex.css";
 
 //: main css file (+tailwindcss in it)
 import './main.css';
+import { Contexts } from "./Contexts";
 
 const root = document.createElement('div');
 root.classList.add('root-element')
 document.body.appendChild(root);
 
-ReactDOM.render(<App />, root);
+ReactDOM.render(<Contexts><App /></Contexts>, root);
+
+if (module.hot) {
+    module.hot.accept();
+}

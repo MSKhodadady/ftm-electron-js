@@ -4,13 +4,7 @@ export interface Driver {
     path: string
 }
 
-export interface Test {
-    name: string
-}
-
-export interface Test3 {
-    name: string
-}
-
 export type UseStateFunction<T> = Dispatch<SetStateAction<T>>;
 export type UseState<T> = [T, UseStateFunction<T>];
+
+export interface FileTag { fileName: string, tagList: string[] }

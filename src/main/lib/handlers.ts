@@ -1,6 +1,6 @@
 import { ipcMain, dialog, shell } from "electron";
 import Database from 'better-sqlite3';
-import { Driver } from "../../common/types";
+import { Driver, FileTag } from "../../common/types";
 
 import path from 'path';
 import { getOptions } from "./utils";
@@ -68,8 +68,6 @@ const handlersList: any = [
     }
   ],
 
-  ['test', e => 'I came back'],
-
   ['files-list', (e, selectedDriver: Driver) => {
     return getDB(selectedDriver).prepare(`SELECT file_name, tag_name FROM file_tag;`).all();
   }],
@@ -87,16 +85,26 @@ const handlersList: any = [
       getDB(selectedDriver).prepare(
         `UPDATE file_tag SET file_name ='${newFileName}' WHERE file_name='${oldFileName}';`
       ).run();
+    }],
+
+  ['files-tag-add',
+    async (e, selectedDriver: Driver, selectedFiles: FileTag[], selectedTags: string[]) => {
+      selectedFiles.forEach(file =>
+        selectedTags && selectedTags.forEach(tag => getDB(selectedDriver)
+          .prepare(`INSERT OR IGNORE INTO file_tag (file_name, tag_name) VALUES('${file.fileName
+            }', '${tag}');`).run())
+      );
     }]
 ];
 
 //: register all handlers
 handlersList.forEach(v => {
   try {
+    const [handlerName, handlerMethod] = v;
     //: remove handlers (because of hot reloading for this module)
-    ipcMain.removeHandler(v[0]);
+    ipcMain.removeHandler(handlerName);
     //: register handlers
-    ipcMain.handle(v[0], v[1]);
+    ipcMain.handle(handlerName, handlerMethod);
   } catch (error) {
     console.error(error);
   }

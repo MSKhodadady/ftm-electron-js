@@ -1,43 +1,29 @@
-import React, { useRef, useState } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
-import { AutoComplete } from "primereact/autocomplete";
 import { Messages } from "primereact/messages";
 import { Checkbox } from "primereact/checkbox";
 import { ipcRenderer } from 'electron';
-import { Driver, UseState } from '../../common/types';
 
-interface Props {
-  selectedDriver: Driver
-}
+import { UseState } from '../../common/types';
+import { DriverContext } from '../contexts/DriverContext';
+import { TagAutoComplete } from './TagAutoComplete';
 
-export const ImportFile = ({ selectedDriver }: Props) => {
+
+export const ImportFile = () => {
+
+  const { driverState: { selectedDriver } } = useContext(DriverContext);
 
   const [selectedPaths, setSelectedPaths]: UseState<string[] | ''> = useState('');
   const [moveFile, setMoveFile]: UseState<boolean> = useState(false);
   const [selectedTags, setSelectedTags]: UseState<string[]> = useState(null);
-  const [filteredTags, setFilteredTags]: UseState<string[]> = useState(null);
 
   const msgRef = useRef(null);
 
   const chooseFile = () => {
     ipcRenderer.invoke('choose-file').then((v: Electron.OpenDialogReturnValue) => {
       if (!v.canceled) setSelectedPaths(v.filePaths);
-    });
-  }
-
-  const searchTag = e => {
-    const query: string = e.query.trim();
-
-    ipcRenderer.invoke('tag-list', query, selectedDriver).then((res: string[]) => {
-      // add the query to list if it isn't in list
-      if (!res.includes(query)) res.push(query);
-
-      // filter the selected tags from list
-      if (selectedTags != null) res = res.filter(v => !selectedTags.includes(v));
-
-      setFilteredTags(res);
     });
   }
 
@@ -88,14 +74,9 @@ export const ImportFile = ({ selectedDriver }: Props) => {
         placeholder="File path"
       />
     </div>
-    <AutoComplete
-      className="tag-input"
-      value={selectedTags}
-      multiple
-      suggestions={filteredTags}
-      completeMethod={searchTag}
-      onChange={e => setSelectedTags(e.value)}
-      placeholder="Enter tags"
+    <TagAutoComplete
+      selectedTags={selectedTags}
+      onChange={xs => setSelectedTags(xs)}
     />
     <div className="p-field-checkbox">
       <Checkbox inputId="binary" checked={moveFile} onChange={e => setMoveFile(e.checked)} />
