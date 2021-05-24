@@ -68,8 +68,21 @@ const handlersList: any = [
     }
   ],
 
-  ['files-list', (e, selectedDriver: Driver) => {
-    return getDB(selectedDriver).prepare(`SELECT file_name, tag_name FROM file_tag;`).all();
+  ['files-list', (e, selectedDriver: Driver, limit: number, offset: number): FileTag[] => {
+    const db = getDB(selectedDriver);
+    const fileList: string[] = db
+      .prepare(`SELECT DISTINCT file_name FROM file_tag ORDER BY file_name LIMIT ${limit} OFFSET ${offset};`)
+      .all()
+      .map(v => v.file_name);
+
+    return fileList.map(fileName => {
+      const tagList = db
+        .prepare(`SELECT tag_name FROM file_tag WHERE file_name = '${fileName}';`)
+        .all()
+        .map(v => v.tag_name);
+
+      return { fileName, tagList };
+    });
   }],
 
   ['open-file',

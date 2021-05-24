@@ -15,9 +15,9 @@ export const ImportFile = () => {
 
   const { driverState: { selectedDriver } } = useContext(DriverContext);
 
-  const [selectedPaths, setSelectedPaths]: UseState<string[] | ''> = useState('');
+  const [selectedPaths, setSelectedPaths]: UseState<string[]> = useState([]);
   const [moveFile, setMoveFile]: UseState<boolean> = useState(false);
-  const [selectedTags, setSelectedTags]: UseState<string[]> = useState(null);
+  const [selectedTags, setSelectedTags]: UseState<string[]> = useState([]);
 
   const msgRef = useRef(null);
 
@@ -32,14 +32,14 @@ export const ImportFile = () => {
       msgRef.current.show({
         severity: 'error', summary: 'Please choose driver'
       });
-    } else if (selectedPaths === '') {
+    } else if (selectedPaths.length == 0) {
       msgRef.current.show({
         severity: 'error', summary: 'Please select a file'
       });
     } else {
       const error = await ipcRenderer.invoke('save-file',
         selectedPaths,
-        selectedTags == null ? [] : selectedTags,
+        selectedTags,
         selectedDriver,
         moveFile
       );
@@ -54,8 +54,8 @@ export const ImportFile = () => {
           severity: 'success', summary: 'File tagged successfully!'
         });
 
-        setSelectedPaths('');
-        setSelectedTags(null);
+        setSelectedPaths([]);
+        setSelectedTags([]);
         setMoveFile(false);
       }
     }
@@ -66,8 +66,7 @@ export const ImportFile = () => {
       <Button label="Choose File" onClick={chooseFile} className="w-1/5 mr-2" />
       <InputText
         value={
-          selectedPaths &&
-          (selectedPaths as string[]).map(v => v + ';').reduce((sum, v) => sum + v)
+          selectedPaths.map(v => v + ';').reduce((sum, v) => sum + v, '')
         }
         contentEditable="false"
         className="w-4/5"
