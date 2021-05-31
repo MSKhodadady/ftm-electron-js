@@ -19,7 +19,7 @@ const App = () => {
   const [drivers, setDrivers]: UseState<Drivers> = useState([]);
   const [route, setRoute]: UseState<string> = useState('explore');
 
-  const routeDispatch = (routeName) => {
+  const routeDispatch = (routeName: string) => {
     switch (routeName) {
       case 'import-file':
         return <ImportFile />

@@ -15,6 +15,8 @@ import "../../node_modules/primeflex/primeflex.css";
 
 //: main css file (+tailwindcss in it)
 import './main.css';
+import './tailwind.css';
+
 import { Contexts } from "./Contexts";
 
 const root = document.createElement('div');

@@ -12,9 +12,9 @@ interface Props {
 export const TagAutoComplete = ({ selectedTags, onChange }: Props) => {
   const { driverState: { selectedDriver } } = useContext(DriverContext);
 
-  const [filteredTags, setFilteredTags]: UseState<string[]> = useState(null);
+  const [filteredTags, setFilteredTags]: UseState<string[]> = useState([]);
 
-  const searchTag = e => {
+  const searchTag = (e: any) => {
     const query: string = e.query.trim();
 
     if (selectedDriver == null) {

@@ -1,12 +1,13 @@
 import { ipcMain, dialog, shell } from "electron";
 import Database from 'better-sqlite3';
+import { Database as DBType } from "better-sqlite3";
 import { Driver, FileTag } from "../../common/types";
 
 import path from 'path';
 import { getOptions } from "./utils";
 import fs from "fs";
 
-const getDB = (selectedDriver: Driver) => new Database(selectedDriver.path + '/.ftm/data.db');
+const getDB = (selectedDriver: Driver): DBType => new Database(selectedDriver.path + '/.ftm/data.db');
 
 //: list of handlers' name and their function
 const handlersList: any = [
@@ -107,6 +108,36 @@ const handlersList: any = [
           .prepare(`INSERT OR IGNORE INTO file_tag (file_name, tag_name) VALUES('${file.fileName
             }', '${tag}');`).run())
       );
+    }],
+
+  ['tag-remove',
+    async (e, selectedDriver: Driver, fileTag: FileTag, tag: string) => {
+      getDB(selectedDriver)
+        .prepare(`DELETE FROM file_tag WHERE file_name='${fileTag.fileName}' AND tag_name='${tag}';`)
+        .run();
+    }],
+
+  ['remove-files',
+    async (e, selectedDriver: Driver, files: FileTag[]) => {
+      //: a recursive async func
+      const removeFiles = async (db: DBType, driverPath: string, files: FileTag[]) => {
+        const [file, ...tail] = files;
+        //: end loop
+        if (!file) {
+          return true;
+        }
+        //: remove tas from db
+        db
+          .prepare(`DELETE FROM  file_tag WHERE file_name = '${file.fileName}';`)
+          .run();
+
+        //: remove file
+        await fs.promises.rm(path.resolve(driverPath, file.fileName));
+        //: recurse
+        return await removeFiles(db, driverPath, tail);
+      }
+
+      await removeFiles(getDB(selectedDriver), selectedDriver.path, files);
     }]
 ];
 

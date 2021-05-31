@@ -19,7 +19,7 @@ export const ImportFile = () => {
   const [moveFile, setMoveFile]: UseState<boolean> = useState(false);
   const [selectedTags, setSelectedTags]: UseState<string[]> = useState([]);
 
-  const msgRef = useRef(null);
+  const msgRef = useRef<Messages | null>(null);
 
   const chooseFile = () => {
     ipcRenderer.invoke('choose-file').then((v: Electron.OpenDialogReturnValue) => {
@@ -27,13 +27,13 @@ export const ImportFile = () => {
     });
   }
 
-  const tagFile = async e => {
+  const tagFile = async (e: any) => {
     if (selectedDriver == null) {
-      msgRef.current.show({
+      msgRef?.current?.show({
         severity: 'error', summary: 'Please choose driver'
       });
     } else if (selectedPaths.length == 0) {
-      msgRef.current.show({
+      msgRef?.current?.show({
         severity: 'error', summary: 'Please select a file'
       });
     } else {
@@ -45,12 +45,12 @@ export const ImportFile = () => {
       );
 
       if (error != undefined) {
-        msgRef.current.show({
+        msgRef?.current?.show({
           severity: 'error', summary: 'Error occurred!'
         });
         console.error(error);
       } else {
-        msgRef.current.show({
+        msgRef?.current?.show({
           severity: 'success', summary: 'File tagged successfully!'
         });
 
@@ -81,7 +81,7 @@ export const ImportFile = () => {
       <Checkbox inputId="binary" checked={moveFile} onChange={e => setMoveFile(e.checked)} />
       <label htmlFor="binary">Move File</label>
     </div>
-    <Button label="Move file" onClick={tagFile} />
+    <Button label="Import" onClick={tagFile} />
     <Messages ref={msgRef} />
   </div>)
 };

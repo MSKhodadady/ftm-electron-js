@@ -1,8 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-
 html, body {
     width: 100%;
     height: 100%;
@@ -20,4 +15,13 @@ html, body {
 
 .file-row:hover .details {
     @apply flex;
+}
+
+.chip:hover .remove {
+    display: inline-block;
+}
+
+/* used in refresh menu item in Explore.tsx */
+.refresh-menu-item .p-menuitem-link .p-menuitem-icon.pi.pi-refresh {
+    @apply mr-0
 }

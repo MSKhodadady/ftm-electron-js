@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, EffectCallback } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 
 import { FileTag, UseState, UseStateFunction } from '../../common/types';
 import { ipcRenderer } from 'electron';
@@ -11,17 +11,7 @@ import { MenuItem } from 'primereact/components/menuitem/MenuItem';
 import { Dialog } from 'primereact/dialog';
 import { TagAutoComplete } from './TagAutoComplete';
 
-interface UseFileList {
-  filesList: FileTag[],
-  setFilesList: UseStateFunction<FileTag[]>,
-  refreshFileList: (...args) => void,
-  page: number
-  setPage: UseStateFunction<number>
-}
-interface Props {
-}
-
-export const useFileList = (): UseFileList => {
+export const useFileList = () => {
   const { driverState: { selectedDriver } } = useContext(DriverContext);
   const [filesList, setFilesList]: UseState<FileTag[]> = useState([]);
   const [page, setPage]: UseState<number> = useState(0);
@@ -45,13 +35,30 @@ export const useFileList = (): UseFileList => {
       });
   }
 
+  const removeTag = async (file: FileTag, tag: string) => {
+    await ipcRenderer.invoke('tag-remove', selectedDriver, file, tag);
+    setFilesList(
+      filesList.map(v => {
+        if (v.fileName == file.fileName) return {
+          fileName: v.fileName,
+          tagList: v.tagList.filter(t => t != tag)
+        }
+        else return v;
+      })
+    );
+  }
+
   return {
     filesList,
+    page,
     setFilesList,
     refreshFileList,
-    page,
-    setPage
+    setPage,
+    removeTag
   };
+}
+
+interface Props {
 }
 
 export const Explore = ({ }: Props) => {
@@ -61,21 +68,33 @@ export const Explore = ({ }: Props) => {
   const [loadMoreButtonLabel, setLoadMoreButtonLabel]: UseState<string> = useState("Load More");
   const [selectedFiles, setSelectedFiles]: UseState<FileTag[]> = useState([]);
   //: for add tag action
-  const [selectedTags, setSelectedTags]: UseState<string[]> = useState(null);
+  const [selectedTags, setSelectedTags]: UseState<string[]> = useState([]);
   //: dialog
   const [showDialog, setShowDialog] = useState(false);
-  const [dialogContent, setDialogContent]: UseState<{ type: 'none' | 'tag-auto-complete' | 'file-not-selected' }>
+  const [dialogContent, setDialogContent]: UseState<{
+    type: 'none' | 'tag-auto-complete' | 'file-not-selected' | 'delete-sure'
+  }>
     = useState({ type: 'none' });
 
-  const { filesList, refreshFileList, page, setPage, setFilesList } = useFileList();
+  const { filesList, page, refreshFileList, setPage, setFilesList, removeTag } = useFileList();
 
   useEffect(() => refreshFileList(setLoadMoreButtonLabel), [selectedDriver, page]);
 
+  const removeFiles = async () => {
+    await ipcRenderer.invoke('remove-files', selectedDriver, selectedFiles);
+
+    setFilesList(
+      filesList.filter(v => !selectedFiles.some(x => x.fileName == v.fileName))
+    );
+    setSelectedFiles([]);
+    setShowDialog(false);
+  }
+
   const menu: MenuItem[] = [
     {
-      label: 'Refresh',
       command: () => setPage(0),
-      icon: 'pi pi-refresh'
+      icon: 'pi pi-refresh',
+      className: 'refresh-menu-item'
     },
     {
       label: 'Add tag',
@@ -87,6 +106,20 @@ export const Explore = ({ }: Props) => {
         } else {
           setShowDialog(true);
           setDialogContent({ type: 'tag-auto-complete' });
+        }
+      }
+    },
+    {
+      label: 'Delete',
+      icon: 'pi pi-trash',
+      command() {
+        if (selectedFiles.length == 0) {
+          setDialogContent({ type: 'file-not-selected' });
+          setShowDialog(true);
+        } else {
+          // removeFiles(selectedFiles, setSelectedFiles);
+          setDialogContent({ type: 'delete-sure' });
+          setShowDialog(true);
         }
       }
     }
@@ -145,19 +178,28 @@ export const Explore = ({ }: Props) => {
             onChange={xs => setSelectedTags(xs)}
           />
         </Dialog>
+      case 'delete-sure':
+        return <Dialog
+          onHide={() => setShowDialog(false)}
+          visible={showDialog}
+          position='top'
+          header='Are you sure?'>
+          <Button label="Yes" onClick={removeFiles} className="w-full p-button-danger" />
+        </Dialog>
     }
   }
 
   return (<div className="w-full">
-    <Menubar model={menu} className="mb-2" />
+    <Menubar model={menu} className="mb-2 sticky top-0" />
     {
       filesList && filesList.map(v => <FileItem
-        fileTagged={v}
+        file={v}
         key={v.fileName}
         refreshList={refreshFileList}
         selectFile={selectFile}
         unselectFile={unselectFile}
         selected={selectedFiles.filter(f => f.fileName === v.fileName).length !== 0}
+        removeTag={removeTag}
       />)
     }
     <Button className="w-full text-center p-button-rounded p-button-outlined"

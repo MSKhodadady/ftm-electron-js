@@ -2,8 +2,8 @@
  * This file is used for configuring system, before the app runs
 */
 
-import { existsSync, mkdirSync, readFileSync } from "fs";
-import { configPath, optionsPath } from './constants';
+import { existsSync, mkdirSync } from "fs";
+import { configPath } from './constants';
 
 import Database from "better-sqlite3";
 import { getOptions } from "./utils";

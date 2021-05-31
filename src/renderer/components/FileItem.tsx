@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import { Chip } from 'primereact/chip';
+// import { Chip } from 'primereact/chip';
 import { InputText } from 'primereact/inputtext';
 import React, { useContext, useState } from 'react';
 import { FileTag, UseState } from "../../common/types";
@@ -8,16 +8,22 @@ import { Checkbox } from 'primereact/checkbox';
 
 
 interface Props {
-  fileTagged: FileTag,
+  file: FileTag,
   selected: boolean,
   refreshList: Function,
   selectFile: Function,
-  unselectFile: Function
+  unselectFile: Function,
+  removeTag: (file: FileTag, tag: string) => Promise<void>
 }
 
+const MyChip = ({ label, className, onRemove }: any) => (<div className={"p-chip p-component chip " + className}>
+  <span className="p-chip-text">{label}</span>
+  <span className="pi pi-times-circle ml-2 remove hidden cursor-pointer" onClick={onRemove} />
+</div>);
+
 export const FileItem = (
-  { fileTagged, refreshList, selectFile, unselectFile, selected }: Props) => {
-  const { fileName, tagList } = fileTagged;
+  p: Props) => {
+  const { fileName, tagList } = p.file;
 
   const { driverState: { selectedDriver } } = useContext(DriverContext);
 
@@ -25,24 +31,24 @@ export const FileItem = (
   const [newFileName, setNewFileName]: UseState<string> = useState(fileName);
 
   //: open file in the OS
-  const openFile = e => {
+  const openFile = (e: any) => {
     ipcRenderer.invoke('open-file', selectedDriver, fileName).then(err => {
-      console.log(err);
+      if (err) console.error(err);
     });
   };
 
-  const editFileName = async e => {
+  const editFileName = async (e: any) => {
     if (isEditFileName) {
       //: rename file
       await ipcRenderer.invoke('rename-file', selectedDriver, fileName, newFileName);
       setIsEditFileName(false);
-      refreshList();
+      p.refreshList();
     } else setIsEditFileName(true);
   }
 
   return (
     <div
-      className={`flex shadow-md rounded-md w-full p-0 mb-2 file-row ${selected ? 'bg-blue-100' : ''}`}>
+      className={`flex shadow-md rounded-md w-full p-0 mb-2 file-row ${p.selected ? 'bg-blue-100' : ''}`}>
       {/* file icon (or thumbnail) */}
       <div className="bg-gray-200 mr-2 h-auto rounded-l-md p-3 cursor-pointer" onClick={openFile}>
         <span className="pi pi-image" />
@@ -57,14 +63,18 @@ export const FileItem = (
             onChange={e => setNewFileName(e.target.value)}
             className={isEditFileName ? '' : 'hidden'}
           />
-          {tagList.map(v => <Chip className="mr-2" label={v} key={v} />)}
+          {tagList.map(v => <MyChip
+            className="mr-2"
+            label={v} key={v}
+            onRemove={() => p.removeTag(p.file, v)}
+          />)}
         </div>
         {/* details */}
         <div className="flex flex-row-reverse details mx-3 hidden">
           <Checkbox
             className="ml-2"
-            checked={selected}
-            onChange={e => e.checked ? selectFile(fileTagged) : unselectFile(fileTagged)} />
+            checked={p.selected}
+            onChange={e => e.checked ? p.selectFile(p.file) : p.unselectFile(p.file)} />
           <span className="pi pi-pencil cursor-pointer" onClick={editFileName} />
         </div>
       </div>
