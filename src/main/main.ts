@@ -1,10 +1,10 @@
 
 import { app, BrowserWindow, globalShortcut } from "electron";
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
-import path from 'path';
 
 //: pre run configs
-import './lib/preRunConfig';
+import { preRunSetup } from './lib/preRunConfig';
+preRunSetup();
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -42,7 +42,7 @@ app.whenReady().then(() => {
     //: remove the module from cache
     delete require.cache[require.resolve('./lib/handlers.ts')];
     //: reload module
-    require('./lib/handlers');
+    require('./lib/handlers').registerHandlers();
   });
   if (!ret) console.error(reloadKeyboardKey + ' not registered!');
   else console.log(reloadKeyboardKey + ' registered!');
@@ -55,4 +55,4 @@ app.on('window-all-closed', () => {
 });
 
 //: handlers
-require('./lib/handlers');
+require('./lib/handlers').registerHandlers();

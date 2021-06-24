@@ -16,7 +16,6 @@ const App = () => {
 
   const { driverState: { selectedDriver } } = useContext(DriverContext);
 
-  const [drivers, setDrivers]: UseState<Drivers> = useState([]);
   const [route, setRoute]: UseState<string> = useState('explore');
 
   const routeDispatch = (routeName: string) => {
@@ -25,18 +24,10 @@ const App = () => {
         return <ImportFile />
       case 'explore':
         return (selectedDriver == null) ?
-          <div className="p-3 bg-yellow-300 w-full h-12 text-center" >Please select driver!</div> :
+          <div className="p-3 bg-yellow-300 h-12 text-center" >Please select driver!</div> :
           <Explore />;
     }
   }
-
-  useEffect(() => {
-    (async () => {
-      const driversList = await ipcRenderer.invoke('get-drivers');
-      setDrivers(driversList);
-    })();
-
-  }, []);
 
   const selectedButtonColor = 'bg-blue-100'
 
@@ -63,8 +54,10 @@ const App = () => {
     <div>
       <Menubar model={menu} />
       <div className="flex p-2">
-        <DriverChoose drivers={drivers} className="w-1/4" />
-        {routeDispatch(route)}
+        <DriverChoose className="w-96" />
+        <div className="w-full">
+          {routeDispatch(route)}
+        </div>
       </div>
     </div>
   );

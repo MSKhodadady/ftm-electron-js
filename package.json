@@ -17,7 +17,7 @@
     "electron-devtools-installer": "^3.1.1",
     "electron-rebuild": "^2.3.5",
     "html-webpack-plugin": "^5.1.0",
-    "parcel": "^2.0.0-beta.2",
+    "parcel": "^2.0.0-beta.3.1",
     "postcss": "^8.2.12",
     "postcss-loader": "^5.2.0",
     "style-loader": "^2.0.0",
@@ -36,7 +36,7 @@
     "parcel:serve": "parcel serve ./src/renderer/main.html --target app"
   },
   "dependencies": {
-    "better-sqlite3": "^7.1.2",
+    "better-sqlite3": "^7.4.0",
     "primeflex": "^2.0.0",
     "primeicons": "^4.1.0",
     "primereact": "^6.0.2",

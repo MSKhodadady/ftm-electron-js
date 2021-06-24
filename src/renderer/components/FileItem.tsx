@@ -1,5 +1,4 @@
 import { ipcRenderer } from 'electron';
-// import { Chip } from 'primereact/chip';
 import { InputText } from 'primereact/inputtext';
 import React, { useContext, useState } from 'react';
 import { FileTag, UseState } from "../../common/types";
@@ -10,7 +9,7 @@ import { Checkbox } from 'primereact/checkbox';
 interface Props {
   file: FileTag,
   selected: boolean,
-  refreshList: Function,
+  editFileName: (fileName: string, newFileName: string) => Promise<void>,
   selectFile: Function,
   unselectFile: Function,
   removeTag: (file: FileTag, tag: string) => Promise<void>
@@ -21,8 +20,7 @@ const MyChip = ({ label, className, onRemove }: any) => (<div className={"p-chip
   <span className="pi pi-times-circle ml-2 remove hidden cursor-pointer" onClick={onRemove} />
 </div>);
 
-export const FileItem = (
-  p: Props) => {
+export const FileItem = (p: Props) => {
   const { fileName, tagList } = p.file;
 
   const { driverState: { selectedDriver } } = useContext(DriverContext);
@@ -40,37 +38,49 @@ export const FileItem = (
   const editFileName = async (e: any) => {
     if (isEditFileName) {
       //: rename file
-      await ipcRenderer.invoke('rename-file', selectedDriver, fileName, newFileName);
+      p.editFileName(fileName, newFileName);
       setIsEditFileName(false);
-      p.refreshList();
-    } else setIsEditFileName(true);
+    } else
+      setIsEditFileName(true);
   }
 
   return (
     <div
-      className={`flex shadow-md rounded-md w-full p-0 mb-2 file-row ${p.selected ? 'bg-blue-100' : ''}`}>
+      className={`flex shadow-md rounded-md w-full p-0 mb-2 detail-hidable ${p.selected ? 'bg-blue-100' : ''}`}>
       {/* file icon (or thumbnail) */}
-      <div className="bg-gray-200 mr-2 h-auto rounded-l-md p-3 cursor-pointer" onClick={openFile}>
+      <div className="bg-gray-100 mr-2 h-auto rounded-l-md p-3 cursor-pointer" onClick={openFile}>
         <span className="pi pi-image" />
       </div>
-      <div className="w-full flex items-center my-3">
+      <div className="flex items-center my-3 w-full ">
         {/* tags */}
         <div className="w-full flex items-center w-1/2">
-          <div className={"mr-2" + (isEditFileName ? ' hidden' : '')}>{fileName}</div>
           {/* for renaming file */}
-          <InputText
-            value={newFileName}
-            onChange={e => setNewFileName(e.target.value)}
-            className={isEditFileName ? '' : 'hidden'}
-          />
-          {tagList.map(v => <MyChip
-            className="mr-2"
-            label={v} key={v}
-            onRemove={() => p.removeTag(p.file, v)}
-          />)}
+          {
+
+            isEditFileName ?
+              <InputText
+                value={newFileName}
+                onChange={e => setNewFileName(e.target.value)}
+                onKeyUp={e => {
+                  if (e.code === 'Enter') {
+                    p.editFileName(fileName, newFileName);
+                    setIsEditFileName(false);
+                  }
+                }}
+              />
+              :
+              <div className="mr-2">{fileName}</div>
+          }
+          {tagList
+            .filter(v => v !== ':EXISTS:')
+            .map(v => <MyChip
+              className="mr-2"
+              label={v} key={v}
+              onRemove={() => p.removeTag(p.file, v)}
+            />)}
         </div>
         {/* details */}
-        <div className="flex flex-row-reverse details mx-3 hidden">
+        <div className="flex flex-row-reverse mx-3 details">
           <Checkbox
             className="ml-2"
             checked={p.selected}

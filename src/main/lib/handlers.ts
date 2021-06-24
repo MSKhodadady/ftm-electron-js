@@ -4,10 +4,16 @@ import { Database as DBType } from "better-sqlite3";
 import { Driver, FileTag } from "../../common/types";
 
 import path from 'path';
-import { getOptions } from "./utils";
+import { getOptions, Options, writeOptions } from "./utils";
 import fs from "fs";
+import { initDriver } from "./preRunConfig";
 
 const getDB = (selectedDriver: Driver): DBType => new Database(selectedDriver.path + '/.ftm/data.db');
+
+type DBFileTagRecord = {
+  file_name: string,
+  tag_name: string
+}
 
 //: list of handlers' name and their function
 const handlersList: any = [
@@ -16,6 +22,10 @@ const handlersList: any = [
       return dialog.showOpenDialog({ properties: ['openFile', 'multiSelections'] });
     }
   ],
+
+  ['choose-folder', (e) => {
+    return dialog.showOpenDialog({ properties: ['openDirectory'] });
+  }],
 
   ['tag-list',
     (event, query, selectedDriver: Driver) => {
@@ -32,9 +42,7 @@ const handlersList: any = [
   ],
 
   ['get-drivers', e => {
-    const { drivers } = getOptions();
-
-    return drivers;
+    return getOptions().drivers;
   }],
 
   ['save-file',
@@ -69,25 +77,32 @@ const handlersList: any = [
     }
   ],
 
-  ['files-list', (e, selectedDriver: Driver, limit: number, offset: number): FileTag[] => {
-    const db = getDB(selectedDriver);
-    const fileList: string[] = db
-      .prepare(`SELECT DISTINCT file_name FROM file_tag ORDER BY file_name LIMIT ${limit} OFFSET ${offset};`)
-      .all()
-      .map(v => v.file_name);
+  ['files-list', (e, selectedDriver: Driver, limit: number, offset: number, filterTags: string[]): FileTag[] => {
+    const filterVers = filterTags.length == 0 ? '' :
+      `WHERE ${filterTags
+        .map(t => `file_name IN (SELECT DISTINCT file_name FROM file_tag WHERE tag_name = '${t}')`).join(' AND\n')
+      }`;
 
-    return fileList.map(fileName => {
-      const tagList = db
-        .prepare(`SELECT tag_name FROM file_tag WHERE file_name = '${fileName}';`)
-        .all()
-        .map(v => v.tag_name);
+    const query = `SELECT file_name, tag_name FROM file_tag${''
+      } WHERE file_name IN (SELECT DISTINCT file_name FROM file_tag ${filterVers
+      } ORDER BY file_name ASC LIMIT ${limit} OFFSET ${offset});`;
 
-      return { fileName, tagList };
-    });
+    const output = getDB(selectedDriver).prepare(query).all();
+
+    return output.reduce((acc: FileTag[], record: DBFileTagRecord): FileTag[] => (
+      acc.some(r => r.fileName === record.file_name) ?
+        acc.map(r =>
+          (r.fileName == record.file_name ? { fileName: r.fileName, tagList: [...r.tagList, record.tag_name] } : r)
+        )
+        : [...acc, { fileName: record.file_name, tagList: [record.tag_name] }]
+    ), []);
   }],
 
   ['open-file',
     (e, selectedDriver: Driver, fileName: string) => shell.openPath(selectedDriver.path + '/' + fileName)],
+
+  ['open-external-file',
+    (e, filePath: string) => shell.openPath(filePath)],
 
   ['rename-file',
     async (e, selectedDriver: Driver, oldFileName: string, newFileName: string) => {
@@ -138,18 +153,75 @@ const handlersList: any = [
       }
 
       await removeFiles(getDB(selectedDriver), selectedDriver.path, files);
+    }],
+
+  ['add-driver',
+    async (e, driver: Driver) => {
+      const options = getOptions();
+
+      initDriver(driver);
+
+      const newOptions = {
+        ...options,
+        drivers: [
+          ...options.drivers,
+          driver
+        ]
+      };
+
+      writeOptions(newOptions);
+
+      return newOptions.drivers;
+    }],
+
+  ['remove-driver',
+    async (e, driver: Driver) => {
+      const options = getOptions();
+
+      const newOptions: Options = {
+        ...options,
+        drivers: options.drivers.filter(
+          ({ name, path }) => !(driver.name == name && driver.path == path)
+        )
+      };
+
+      writeOptions(newOptions);
+
+      return newOptions.drivers;
+    }],
+
+  ['rename-driver',
+    async (e, driver: Driver, newName: string) => {
+      const options = getOptions();
+
+      const newOptions: Options = {
+        ...options,
+
+        drivers: options.drivers.map(
+          f => (
+            (f.name == driver.name && f.path == driver.path) ?
+              ({ name: newName, path: f.path }) : f
+          )
+        )
+      };
+
+      writeOptions(newOptions);
+
+      return newOptions.drivers;
     }]
 ];
 
 //: register all handlers
-handlersList.forEach(v => {
-  try {
-    const [handlerName, handlerMethod] = v;
-    //: remove handlers (because of hot reloading for this module)
-    ipcMain.removeHandler(handlerName);
-    //: register handlers
-    ipcMain.handle(handlerName, handlerMethod);
-  } catch (error) {
-    console.error(error);
-  }
-});
+export const registerHandlers = () => {
+  handlersList.forEach(v => {
+    try {
+      const [handlerName, handlerMethod] = v;
+      //: remove handlers (because of hot reloading for this module)
+      ipcMain.removeHandler(handlerName);
+      //: register handlers
+      ipcMain.handle(handlerName, handlerMethod);
+    } catch (error) {
+      console.error(error);
+    }
+  });
+}

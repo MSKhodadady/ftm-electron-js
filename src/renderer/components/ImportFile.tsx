@@ -1,7 +1,6 @@
 import React, { useContext, useRef, useState } from 'react';
 
 import { Button } from "primereact/button";
-import { InputText } from "primereact/inputtext";
 import { Messages } from "primereact/messages";
 import { Checkbox } from "primereact/checkbox";
 import { ipcRenderer } from 'electron';
@@ -9,9 +8,14 @@ import { ipcRenderer } from 'electron';
 import { UseState } from '../../common/types';
 import { DriverContext } from '../contexts/DriverContext';
 import { TagAutoComplete } from './TagAutoComplete';
+import { ImportFileItem } from './ImportFileItem';
+import { EXISTS } from '../../common/constants';
 
+interface Props {
+  className?: string
+}
 
-export const ImportFile = () => {
+export const ImportFile = (p: Props) => {
 
   const { driverState: { selectedDriver } } = useContext(DriverContext);
 
@@ -39,7 +43,11 @@ export const ImportFile = () => {
     } else {
       const error = await ipcRenderer.invoke('save-file',
         selectedPaths,
-        selectedTags,
+        [
+          ...new Set(
+            [EXISTS, ...selectedTags]
+          )
+        ],
         selectedDriver,
         moveFile
       );
@@ -61,27 +69,23 @@ export const ImportFile = () => {
     }
   }
 
-  return (<div className="grid grid-cols-1 gap-y-2 w-3/4">
-    <div className="flex">
-      <Button label="Choose File" onClick={chooseFile} className="w-1/5 mr-2" />
-      <InputText
-        value={
-          selectedPaths.map(v => v + ';').reduce((sum, v) => sum + v, '')
-        }
-        contentEditable="false"
-        className="w-4/5"
-        placeholder="File path"
-      />
-    </div>
+  return (<div className={p?.className + " grid grid-cols-1 gap-y-2"}>
+    <Button label="Choose File" onClick={chooseFile} />
     <TagAutoComplete
       selectedTags={selectedTags}
       onChange={xs => setSelectedTags(xs)}
+      disabled={selectedPaths.length == 0}
+      placeHolder={selectedPaths.length > 1 ? "Enter tags for all files" : "Enter tags"}
     />
     <div className="p-field-checkbox">
       <Checkbox inputId="binary" checked={moveFile} onChange={e => setMoveFile(e.checked)} />
-      <label htmlFor="binary">Move File</label>
+      <label htmlFor="binary">Move File(s)</label>
     </div>
+    {selectedPaths.map(filePath => <ImportFileItem
+      filePath={filePath}
+      key={filePath}
+    />)}
     <Button label="Import" onClick={tagFile} />
     <Messages ref={msgRef} />
-  </div>)
+  </div>);
 };

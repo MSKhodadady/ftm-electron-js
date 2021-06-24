@@ -7,14 +7,16 @@ import { DriverContext } from "../contexts/DriverContext";
 interface Props {
   selectedTags: string[],
   onChange: (selectedTags: string[]) => void
+  disabled?: boolean
+  placeHolder?: string
 }
 
-export const TagAutoComplete = ({ selectedTags, onChange }: Props) => {
+export const TagAutoComplete = ({ selectedTags, onChange, disabled, placeHolder }: Props) => {
   const { driverState: { selectedDriver } } = useContext(DriverContext);
 
   const [filteredTags, setFilteredTags]: UseState<string[]> = useState([]);
 
-  const searchTag = (e: any) => {
+  const searchTag = async (e: any) => {
     const query: string = e.query.trim();
 
     if (selectedDriver == null) {
@@ -22,15 +24,16 @@ export const TagAutoComplete = ({ selectedTags, onChange }: Props) => {
       return;
     }
 
-    ipcRenderer.invoke('tag-list', query, selectedDriver).then((res: string[]) => {
-      // add the query to list if it isn't in list
-      if (!res.includes(query)) res.push(query);
+    const res: string[] = await ipcRenderer.invoke('tag-list', query, selectedDriver)
 
-      // filter the selected tags from list
-      if (selectedTags != null) res = res.filter(v => !selectedTags.includes(v));
+    setFilteredTags(
+      [...new Set(
+        [...res, query]
+      )]
+        .filter(v => !selectedTags.includes(v))
+        .filter(v => !v.startsWith(':'))
+    );
 
-      setFilteredTags(res);
-    });
   }
 
   return (<AutoComplete
@@ -40,6 +43,7 @@ export const TagAutoComplete = ({ selectedTags, onChange }: Props) => {
     suggestions={filteredTags}
     completeMethod={searchTag}
     onChange={e => onChange(e.value)}
-    placeholder="Enter tags"
+    placeholder={placeHolder !== undefined ? placeHolder : "Enter tags"}
+    disabled={disabled !== undefined ? disabled : false}
   />);
 }

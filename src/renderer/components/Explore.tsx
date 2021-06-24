@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 
-import { FileTag, UseState, UseStateFunction } from '../../common/types';
+import { FileTag } from '../../common/types';
 import { ipcRenderer } from 'electron';
 
 import { DriverContext } from '../contexts/DriverContext';
@@ -13,14 +13,18 @@ import { TagAutoComplete } from './TagAutoComplete';
 
 export const useFileList = () => {
   const { driverState: { selectedDriver } } = useContext(DriverContext);
-  const [filesList, setFilesList]: UseState<FileTag[]> = useState([]);
-  const [page, setPage]: UseState<number> = useState(0);
 
-  const limit = 50;
+  const [filesList, setFilesList] = useState<FileTag[]>([]);
+  const [page, setPage] = useState<number>(0);
+  const [filterTags, setFilterTags] = useState<string[]>([]);
+
+  const limit = 200;
   const offset = limit * page;
 
-  const refreshFileList = (setLoadMoreButtonLabel: UseStateFunction<string>) => {
-    ipcRenderer.invoke('files-list', selectedDriver, limit, offset)
+  const refreshFileList = (setLoadMoreButtonLabel:
+    React.Dispatch<React.SetStateAction<string>>) => {
+
+    ipcRenderer.invoke('files-list', selectedDriver, limit, offset, filterTags)
       .then(newFilesList => {
         if (page == 0)
           setFilesList(newFilesList);
@@ -48,37 +52,58 @@ export const useFileList = () => {
     );
   }
 
+  const editFileName = async (fileName: string, newFileName: string) => {
+    await ipcRenderer.invoke('rename-file', selectedDriver, fileName, newFileName);
+
+    setFilesList(filesList.map(
+      file => file.fileName === fileName ? { fileName: newFileName, tagList: file.tagList } : file
+    )
+    );
+  }
+
   return {
-    filesList,
-    page,
-    setFilesList,
+    filesList: { filesList, setFilesList },
+    page: { page, setPage },
+    filterTags: { filterTags, setFilterTags },
+
     refreshFileList,
-    setPage,
-    removeTag
+    removeTag,
+    editFileName
   };
 }
 
 interface Props {
+  className?: string
 }
 
-export const Explore = ({ }: Props) => {
+export const Explore = (p: Props) => {
 
   const { driverState: { selectedDriver } } = useContext(DriverContext);
 
-  const [loadMoreButtonLabel, setLoadMoreButtonLabel]: UseState<string> = useState("Load More");
-  const [selectedFiles, setSelectedFiles]: UseState<FileTag[]> = useState([]);
+  const [loadMoreButtonLabel, setLoadMoreButtonLabel] = useState<string>("Load More");
+  const [selectedFiles, setSelectedFiles] = useState<FileTag[]>([]);
   //: for add tag action
-  const [selectedTags, setSelectedTags]: UseState<string[]> = useState([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   //: dialog
   const [showDialog, setShowDialog] = useState(false);
-  const [dialogContent, setDialogContent]: UseState<{
-    type: 'none' | 'tag-auto-complete' | 'file-not-selected' | 'delete-sure'
-  }>
-    = useState({ type: 'none' });
+  const [dialogContent, setDialogContent]
+    = useState<{
+      type: 'none' | 'tag-auto-complete' | 'file-not-selected' | 'delete-sure'
+    }>({ type: 'none' });
 
-  const { filesList, page, refreshFileList, setPage, setFilesList, removeTag } = useFileList();
+  const {
+    refreshFileList,
+    editFileName,
+    removeTag,
+    filesList: { filesList, setFilesList },
+    page: { page, setPage },
+    filterTags: { filterTags, setFilterTags }
+  } = useFileList();
 
-  useEffect(() => refreshFileList(setLoadMoreButtonLabel), [selectedDriver, page]);
+  useEffect(
+    () => refreshFileList(setLoadMoreButtonLabel),
+    [page, selectedDriver, filterTags]
+  );
 
   const removeFiles = async () => {
     await ipcRenderer.invoke('remove-files', selectedDriver, selectedFiles);
@@ -92,12 +117,15 @@ export const Explore = ({ }: Props) => {
 
   const menu: MenuItem[] = [
     {
-      command: () => setPage(0),
+      command: () => {
+        setPage(0)
+        refreshFileList(setLoadMoreButtonLabel);
+      },
       icon: 'pi pi-refresh',
-      className: 'refresh-menu-item'
+      className: 'just-icon-menu-item'
     },
     {
-      label: 'Add tag',
+      label: 'Add Tag',
       icon: 'pi pi-tag',
       command() {
         if (selectedFiles.length == 0) {
@@ -169,6 +197,7 @@ export const Explore = ({ }: Props) => {
         </Dialog>;
       case 'tag-auto-complete':
         return <Dialog
+          header="Add Tag"
           onHide={() => setShowDialog(false)}
           visible={showDialog}
           position='top'
@@ -189,13 +218,19 @@ export const Explore = ({ }: Props) => {
     }
   }
 
-  return (<div className="w-full">
-    <Menubar model={menu} className="mb-2 sticky top-0" />
+  return (<div className={p?.className}>
+    <Menubar
+      model={menu}
+      className="mb-2 sticky top-0"
+      end={
+        <TagAutoComplete selectedTags={filterTags} onChange={xs => setFilterTags(xs)} />
+      }
+    />
     {
       filesList && filesList.map(v => <FileItem
         file={v}
         key={v.fileName}
-        refreshList={refreshFileList}
+        editFileName={editFileName}
         selectFile={selectFile}
         unselectFile={unselectFile}
         selected={selectedFiles.filter(f => f.fileName === v.fileName).length !== 0}
