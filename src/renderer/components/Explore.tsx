@@ -10,6 +10,7 @@ import { Menubar } from 'primereact/menubar';
 import { MenuItem } from 'primereact/components/menuitem/MenuItem';
 import { Dialog } from 'primereact/dialog';
 import { TagAutoComplete } from './TagAutoComplete';
+import { deduplicate } from '../../common/lib';
 
 export const useFileList = () => {
   const { driverState: { selectedDriver } } = useContext(DriverContext);
@@ -168,10 +169,10 @@ export const Explore = (p: Props) => {
       if (selectedFiles.filter(f => f.fileName == v.fileName).length != 0) {
         return {
           fileName: v.fileName,
-          tagList: [... new Set([
+          tagList: deduplicate([
             ...v.tagList,
             ...selectedTags
-          ])]
+          ])
         };
       } else return v;
     }));

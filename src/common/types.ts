@@ -7,4 +7,9 @@ export interface Driver {
 export type UseStateFunction<T> = Dispatch<SetStateAction<T>>;
 export type UseState<T> = [T, UseStateFunction<T>];
 
-export interface FileTag { fileName: string, tagList: string[] }
+export interface FileTag {
+    fileName: string, tagList: string[]
+}
+export interface MoveableFileTag extends FileTag {
+    path: string
+}

@@ -1,7 +1,8 @@
 import { ipcMain, dialog, shell } from "electron";
 import Database from 'better-sqlite3';
 import { Database as DBType } from "better-sqlite3";
-import { Driver, FileTag } from "../../common/types";
+import { Driver, FileTag, MoveableFileTag } from "../../common/types";
+import { deduplicate, EXISTS } from "../../common/lib";
 
 import path from 'path';
 import { getOptions, Options, writeOptions } from "./utils";
@@ -16,7 +17,7 @@ type DBFileTagRecord = {
 }
 
 //: list of handlers' name and their function
-const handlersList: any = [
+const handlersList: [string, (event: Electron.IpcMainInvokeEvent, ...args: any[]) => any][] = [
   ['choose-file',
     (): Promise<Electron.OpenDialogReturnValue> => {
       return dialog.showOpenDialog({ properties: ['openFile', 'multiSelections'] });
@@ -64,7 +65,8 @@ const handlersList: any = [
           // set tags to files
           if (selectedTags != [])
             selectedTags.forEach(tag => {
-              const query = `INSERT INTO file_tag (file_name, tag_name, tag_value) VALUES('${fileName}', '${tag}', NULL);`;
+              const query = `INSERT INTO file_tag (file_name, tag_name, tag_value) VALUES('${fileName
+                }', '${tag}', NULL);`;
               db.prepare(query).run();
             });
 
@@ -76,6 +78,34 @@ const handlersList: any = [
 
     }
   ],
+
+  ['import-files',
+    async (
+      event, selectedDriver: Driver, selectedFiles: MoveableFileTag[], moveFile: boolean
+    ) => {
+      const db = getDB(selectedDriver);
+
+      await Promise.all(
+        selectedFiles.map(async f => {
+          //: copy file
+          await fs.promises.copyFile(
+            f.path, path.resolve(selectedDriver.path, f.fileName));
+
+          //: delete file
+          if (moveFile)
+            await fs.promises.rm(f.path);
+
+          //: add to db and set tags
+          //: - add `:EXISTS:` tag to the list of tags, and deduplicate
+          deduplicate([...f.tagList, EXISTS]).forEach(tag => {
+            db
+              .prepare(`INSERT INTO file_tag ${'\n'
+                }(file_name, tag_name, tag_value) VALUES('${f.fileName
+                }', '${tag}', NULL);`)
+              .run();
+          });
+        }));
+    }],
 
   ['files-list', (e, selectedDriver: Driver, limit: number, offset: number, filterTags: string[]): FileTag[] => {
     const filterVers = filterTags.length == 0 ? '' :

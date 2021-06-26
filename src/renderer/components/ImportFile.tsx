@@ -5,11 +5,11 @@ import { Messages } from "primereact/messages";
 import { Checkbox } from "primereact/checkbox";
 import { ipcRenderer } from 'electron';
 
-import { UseState } from '../../common/types';
 import { DriverContext } from '../contexts/DriverContext';
 import { TagAutoComplete } from './TagAutoComplete';
 import { ImportFileItem } from './ImportFileItem';
-import { EXISTS } from '../../common/constants';
+import { deduplicate, EXISTS } from '../../common/lib';
+import { MoveableFileTag } from '../../common/types';
 
 interface Props {
   className?: string
@@ -19,15 +19,23 @@ export const ImportFile = (p: Props) => {
 
   const { driverState: { selectedDriver } } = useContext(DriverContext);
 
-  const [selectedPaths, setSelectedPaths]: UseState<string[]> = useState([]);
-  const [moveFile, setMoveFile]: UseState<boolean> = useState(false);
-  const [selectedTags, setSelectedTags]: UseState<string[]> = useState([]);
+  // const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
+  const [moveFile, setMoveFile] = useState<boolean>(true);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const [selectedFiles, setSelectedFiles] = useState<MoveableFileTag[]>([]);
 
   const msgRef = useRef<Messages | null>(null);
 
   const chooseFile = () => {
     ipcRenderer.invoke('choose-file').then((v: Electron.OpenDialogReturnValue) => {
-      if (!v.canceled) setSelectedPaths(v.filePaths);
+      if (!v.canceled)
+        setSelectedFiles(
+          v.filePaths.map(filePath => {
+            const fileName = filePath.replace(/^.*[\\\/]/, '');
+            return { fileName, path: filePath, tagList: [] };
+          })
+        );
     });
   }
 
@@ -36,54 +44,62 @@ export const ImportFile = (p: Props) => {
       msgRef?.current?.show({
         severity: 'error', summary: 'Please choose driver'
       });
-    } else if (selectedPaths.length == 0) {
+    } else if (selectedFiles.length == 0) {
       msgRef?.current?.show({
-        severity: 'error', summary: 'Please select a file'
+        severity: 'error', summary: 'Please select some file'
       });
     } else {
-      const error = await ipcRenderer.invoke('save-file',
-        selectedPaths,
-        [
-          ...new Set(
-            [EXISTS, ...selectedTags]
-          )
-        ],
+      await ipcRenderer.invoke('import-files',
         selectedDriver,
+        selectedFiles.map(f => ({
+          ...f,
+          tagList: deduplicate([...f.tagList, ...selectedTags, EXISTS])
+        })),
         moveFile
       );
 
-      if (error != undefined) {
-        msgRef?.current?.show({
-          severity: 'error', summary: 'Error occurred!'
-        });
-        console.error(error);
-      } else {
-        msgRef?.current?.show({
-          severity: 'success', summary: 'File tagged successfully!'
-        });
+      msgRef?.current?.show({
+        severity: 'success', summary: 'File tagged successfully!'
+      });
 
-        setSelectedPaths([]);
-        setSelectedTags([]);
-        setMoveFile(false);
-      }
+      setSelectedFiles([]);
+      setSelectedTags([]);
+      setMoveFile(false);
     }
   }
+
+  const addTagFile = (selectedFile: MoveableFileTag, tagList: string[]) => {
+    setSelectedFiles(
+      selectedFiles.map(f => f.path === selectedFile.path ?
+        { path: selectedFile.path, fileName: selectedFile.fileName, tagList } :
+        f
+      )
+    );
+  }
+
+  const injectSuggestTags = selectedFiles
+    .reduce<string[]>(
+      (acc, i: MoveableFileTag) => {
+        return [...acc, ...i.tagList];
+      }, []);
 
   return (<div className={p?.className + " grid grid-cols-1 gap-y-2"}>
     <Button label="Choose File" onClick={chooseFile} />
     <TagAutoComplete
       selectedTags={selectedTags}
       onChange={xs => setSelectedTags(xs)}
-      disabled={selectedPaths.length == 0}
-      placeHolder={selectedPaths.length > 1 ? "Enter tags for all files" : "Enter tags"}
+      disabled={selectedFiles.length == 0}
+      placeHolder={selectedFiles.length > 1 ? "Enter tags for all files" : "Enter tags"}
     />
     <div className="p-field-checkbox">
       <Checkbox inputId="binary" checked={moveFile} onChange={e => setMoveFile(e.checked)} />
       <label htmlFor="binary">Move File(s)</label>
     </div>
-    {selectedPaths.map(filePath => <ImportFileItem
-      filePath={filePath}
-      key={filePath}
+    {selectedFiles.map(f => <ImportFileItem
+      injectSuggestTags={injectSuggestTags}
+      selectedFile={f}
+      addTagFile={addTagFile}
+      key={f.path}
     />)}
     <Button label="Import" onClick={tagFile} />
     <Messages ref={msgRef} />
