@@ -30,7 +30,7 @@ export const TagAutoComplete = (p: Props) => {
     const res: string[] = await ipcRenderer.invoke('tag-list', query, selectedDriver);
 
     setFilteredTags(
-      deduplicate([query, ...res, ...(p.injectSuggestTags || [])])
+      deduplicate([...res, query, ...(p.injectSuggestTags || [])])
         .filter(v => !p.selectedTags.includes(v))
         .filter(v => !v.startsWith(':'))
     );
