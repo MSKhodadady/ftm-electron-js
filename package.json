@@ -33,7 +33,8 @@
     "build:renderer": "webpack --config ./configs/renderer/webpack.config.js",
     "run:main": "electron mainRunner.js --inspect",
     "run:renderer": "webpack serve --config ./configs/renderer/webpack.hot.js",
-    "parcel:serve": "parcel serve ./src/renderer/main.html --target app"
+    "parcel:serve": "parcel serve ./src/renderer/main.html --target app",
+    "parcel:build": "parcel build ./src/renderer/main.html --target build"
   },
   "dependencies": {
     "better-sqlite3": "^7.4.0",
@@ -52,6 +53,13 @@
       "sourceMap": {
         "inline": true
       }
+    },
+    "build": {
+      "context": "electron-renderer",
+      "distDir": "dist/renderer",
+      "publicUrl": ".",
+      "scopeHoist": true,
+      "outputFormat": "commonjs"
     }
   }
 }

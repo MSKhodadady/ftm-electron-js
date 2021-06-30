@@ -1,6 +1,7 @@
 
 import { app, BrowserWindow, globalShortcut } from "electron";
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import path from 'path';
 
 //: pre run configs
 import { preRunSetup } from './lib/preRunConfig';

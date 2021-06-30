@@ -99,6 +99,7 @@ export const ImportFile = (p: Props) => {
       injectSuggestTags={injectSuggestTags}
       selectedFile={f}
       addTagFile={addTagFile}
+      unselectFile={file => setSelectedFiles(selectedFiles.filter(f => f.path !== file.path))}
       key={f.path}
     />)}
     <Button label="Import" onClick={tagFile} />
