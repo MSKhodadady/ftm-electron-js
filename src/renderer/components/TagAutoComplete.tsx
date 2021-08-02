@@ -1,4 +1,3 @@
-import { ipcRenderer } from "electron";
 import { AutoComplete } from "primereact/autocomplete";
 import React, { useContext, useState } from "react";
 import { deduplicate } from "../../common/lib";
@@ -27,7 +26,7 @@ export const TagAutoComplete = (p: Props) => {
       return;
     }
 
-    const res: string[] = await ipcRenderer.invoke('tag-list', query, selectedDriver);
+    const res: string[] = await window.handler.invoke('tag-list', query, selectedDriver);
 
     setFilteredTags(
       deduplicate([...res, query, ...(p.injectSuggestTags || [])])

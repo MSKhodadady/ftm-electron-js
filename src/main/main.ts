@@ -10,14 +10,12 @@ preRunSetup();
 function createWindow() {
   const win = new BrowserWindow({
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      preload: path.resolve(__dirname, 'preload.js')
     }
   });
 
   //: TODO: load this file in production
   // win.loadFile(path.resolve('.', 'dist', 'renderer', 'main.html'));
-  // win.loadURL('http://localhost:8080/');
   win.loadURL('http://localhost:1234/');
 
   win.maximize();

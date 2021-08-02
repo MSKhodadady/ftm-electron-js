@@ -16,3 +16,5 @@ export function writeOptions(options: Options) {
   return fs.writeFileSync(optionsPath(), JSON.stringify(options));
 }
 
+export function preparedSqlName(s: string) { return s.replace(/\'/g, "''"); }
+

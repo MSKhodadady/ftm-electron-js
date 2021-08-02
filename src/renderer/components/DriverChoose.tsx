@@ -1,4 +1,3 @@
-import { ipcRenderer } from 'electron/renderer';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
@@ -23,15 +22,15 @@ export const DriverChoose = (props: Props) => {
 
   useEffect(() => {
     (async () => {
-      const driverList = await ipcRenderer.invoke('get-drivers');
+      const driverList = await window.handler.invoke('get-drivers');
       dispatchDriver({ type: 'set-drivers', driverList })
     })();
 
   }, []);
 
   const openFolder = async () => {
-    const path: Electron.OpenDialogReturnValue =
-      await ipcRenderer.invoke('choose-folder');
+    const path =
+      await window.handler.invoke('choose-folder');
     if (!path.canceled) {
       setSelectedPath(path.filePaths[0]);
     }
@@ -43,7 +42,7 @@ export const DriverChoose = (props: Props) => {
 
     setShowDialog(false);
 
-    const newDrivers = await ipcRenderer.invoke('add-driver', {
+    const newDrivers = await window.handler.invoke('add-driver', {
       name: selectedName, path: selectedPath
     });
 
@@ -54,13 +53,13 @@ export const DriverChoose = (props: Props) => {
   }
 
   const removeDriver = async (driver: Driver) => {
-    const newDrivers = await ipcRenderer.invoke('remove-driver', driver);
+    const newDrivers = await window.handler.invoke('remove-driver', driver);
     dispatchDriver({ type: 'set-drivers', driverList: newDrivers });
     dispatchDriver({ type: 'unselect' });
   }
 
   const renameDriver = async (driver: Driver, newName: string) => {
-    const newDrivers = await ipcRenderer.invoke('rename-driver', driver, newName);
+    const newDrivers = await window.handler.invoke('rename-driver', driver, newName);
     dispatchDriver({ type: 'set-drivers', driverList: newDrivers });
   }
 
@@ -144,6 +143,8 @@ export const DriverChoose = (props: Props) => {
       }
 
       {dialogDispatch()}
+      <Button onClick={e => window.handler.invoke('tag-list-all', driverState.selectedDriver, 50).then(console.log)}
+        label="tag-list-all" />
     </div>
   );
 }

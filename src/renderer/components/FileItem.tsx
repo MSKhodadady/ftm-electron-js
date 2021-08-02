@@ -1,4 +1,3 @@
-import { ipcRenderer } from 'electron';
 import { InputText } from 'primereact/inputtext';
 import React, { useContext, useState } from 'react';
 import { FileTag, UseState } from "../../common/types";
@@ -30,7 +29,7 @@ export const FileItem = (p: Props) => {
 
   //: open file in the OS
   const openFile = (e: any) => {
-    ipcRenderer.invoke('open-file', selectedDriver, fileName).then(err => {
+    window.handler.invoke('open-file', selectedDriver, fileName).then((err: any) => {
       if (err) console.error(err);
     });
   };

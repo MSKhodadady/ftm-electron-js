@@ -1,4 +1,3 @@
-import { ipcRenderer } from 'electron';
 import React from 'react';
 import { MoveableFileTag } from '../../common/types';
 import { TagAutoComplete } from './TagAutoComplete';
@@ -17,7 +16,7 @@ export const ImportFileItem = ({ selectedFile, addTagFile, injectSuggestTags, un
     <div className="flex w-full">
       <div
         className="bg-gray-200 mr-2 h-auto rounded-md p-3 cursor-pointer"
-        onClick={() => ipcRenderer.invoke('open-external-file', selectedFile.path)}>
+        onClick={() => window.handler.invoke('open-external-file', selectedFile.path)}>
         <span className="pi pi-image" />
       </div>
       <div>
@@ -32,7 +31,7 @@ export const ImportFileItem = ({ selectedFile, addTagFile, injectSuggestTags, un
         injectSuggestTags={injectSuggestTags} />
     </div>
     <div>
-      <span className="pi pi-trash cursor-pointer" onClick={() => unselectFile(selectedFile)} />
+      <span className="pi pi-trash cursor-pointer ml-2" onClick={() => unselectFile(selectedFile)} />
     </div>
   </div>);
 }

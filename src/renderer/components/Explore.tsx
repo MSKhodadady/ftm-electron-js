@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 
 import { FileTag } from '../../common/types';
-import { ipcRenderer } from 'electron';
 
 import { DriverContext } from '../contexts/DriverContext';
 import { FileItem } from './FileItem';
@@ -19,14 +18,14 @@ export const useFileList = () => {
   const [page, setPage] = useState<number>(0);
   const [filterTags, setFilterTags] = useState<string[]>([]);
 
-  const limit = 200;
+  const limit = 1000;
   const offset = limit * page;
 
   const refreshFileList = (setLoadMoreButtonLabel:
     React.Dispatch<React.SetStateAction<string>>) => {
 
-    ipcRenderer.invoke('files-list', selectedDriver, limit, offset, filterTags)
-      .then(newFilesList => {
+    window.handler.invoke('files-list', selectedDriver, limit, offset, filterTags)
+      .then((newFilesList: FileTag[]) => {
         if (page == 0)
           setFilesList(newFilesList);
         else if (newFilesList.length == 0) {
@@ -41,7 +40,7 @@ export const useFileList = () => {
   }
 
   const removeTag = async (file: FileTag, tag: string) => {
-    await ipcRenderer.invoke('tag-remove', selectedDriver, file, tag);
+    await window.handler.invoke('tag-remove', selectedDriver, file, tag);
     setFilesList(
       filesList.map(v => {
         if (v.fileName == file.fileName) return {
@@ -54,7 +53,7 @@ export const useFileList = () => {
   }
 
   const editFileName = async (fileName: string, newFileName: string) => {
-    await ipcRenderer.invoke('rename-file', selectedDriver, fileName, newFileName);
+    await window.handler.invoke('rename-file', selectedDriver, fileName, newFileName);
 
     setFilesList(filesList.map(
       file => file.fileName === fileName ? { fileName: newFileName, tagList: file.tagList } : file
@@ -107,7 +106,7 @@ export const Explore = (p: Props) => {
   );
 
   const removeFiles = async () => {
-    await ipcRenderer.invoke('remove-files', selectedDriver, selectedFiles);
+    await window.handler.invoke('remove-files', selectedDriver, selectedFiles);
 
     setFilesList(
       filesList.filter(v => !selectedFiles.some(x => x.fileName == v.fileName))
@@ -163,7 +162,7 @@ export const Explore = (p: Props) => {
   }
 
   const addTag = async () => {
-    await ipcRenderer.invoke('files-tag-add', selectedDriver, selectedFiles, selectedTags);
+    await window.handler.invoke('files-tag-add', selectedDriver, selectedFiles, selectedTags);
     //: show tags in the files list
     setFilesList(filesList.map(v => {
       if (selectedFiles.filter(f => f.fileName == v.fileName).length != 0) {

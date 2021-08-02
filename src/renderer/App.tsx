@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 
 import { Driver, UseState, } from "../common/types";
 import { DriverChoose } from './components/DriverChoose';
@@ -6,11 +6,8 @@ import { ImportFile } from './components/ImportFile';
 import { Explore } from './components/Explore';
 import { DriverContext } from './contexts/DriverContext';
 
-import { ipcRenderer } from "electron";
 import { MenuItem } from 'primereact/components/menuitem/MenuItem';
 import { Menubar } from "primereact/menubar";
-
-type Drivers = Driver[];
 
 const App = () => {
 

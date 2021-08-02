@@ -5,7 +5,7 @@ import { Driver, FileTag, MoveableFileTag } from "../../common/types";
 import { deduplicate, EXISTS } from "../../common/lib";
 
 import path from 'path';
-import { getOptions, Options, writeOptions } from "./utils";
+import { getOptions, Options, preparedSqlName, writeOptions } from "./utils";
 import fs from "fs";
 import { initDriver } from "./preRunConfig";
 
@@ -65,8 +65,11 @@ const handlersList: [string, (event: Electron.IpcMainInvokeEvent, ...args: any[]
           // set tags to files
           if (selectedTags != [])
             selectedTags.forEach(tag => {
-              const query = `INSERT INTO file_tag (file_name, tag_name, tag_value) VALUES('${fileName
-                }', '${tag}', NULL);`;
+              const query = `INSERT INTO file_tag (file_name, tag_name, tag_value) VALUES(
+                '${preparedSqlName(fileName)}',
+                '${tag}',
+                NULL
+              );`;
               db.prepare(query).run();
             });
 
@@ -99,9 +102,12 @@ const handlersList: [string, (event: Electron.IpcMainInvokeEvent, ...args: any[]
           //: - add `:EXISTS:` tag to the list of tags, and deduplicate
           deduplicate([...f.tagList, EXISTS]).forEach(tag => {
             db
-              .prepare(`INSERT INTO file_tag ${'\n'
-                }(file_name, tag_name, tag_value) VALUES('${f.fileName
-                }', '${tag}', NULL);`)
+              .prepare(`INSERT INTO file_tag (file_name, tag_name, tag_value)
+              VALUES(
+                  '${preparedSqlName(f.fileName)}',
+                  '${tag}',
+                  NULL
+                );`)
               .run();
           });
         }));
@@ -142,7 +148,9 @@ const handlersList: [string, (event: Electron.IpcMainInvokeEvent, ...args: any[]
       );
 
       getDB(selectedDriver).prepare(
-        `UPDATE file_tag SET file_name ='${newFileName}' WHERE file_name='${oldFileName}';`
+        `UPDATE file_tag
+        SET file_name ='${preparedSqlName(newFileName)}'
+        WHERE file_name='${preparedSqlName(oldFileName)}';`
       ).run();
     }],
 
@@ -150,7 +158,7 @@ const handlersList: [string, (event: Electron.IpcMainInvokeEvent, ...args: any[]
     async (e, selectedDriver: Driver, selectedFiles: FileTag[], selectedTags: string[]) => {
       selectedFiles.forEach(file =>
         selectedTags && selectedTags.forEach(tag => getDB(selectedDriver)
-          .prepare(`INSERT OR IGNORE INTO file_tag (file_name, tag_name) VALUES('${file.fileName
+          .prepare(`INSERT OR IGNORE INTO file_tag (file_name, tag_name) VALUES('${preparedSqlName(file.fileName)
             }', '${tag}');`).run())
       );
     }],
@@ -158,7 +166,7 @@ const handlersList: [string, (event: Electron.IpcMainInvokeEvent, ...args: any[]
   ['tag-remove',
     async (e, selectedDriver: Driver, fileTag: FileTag, tag: string) => {
       getDB(selectedDriver)
-        .prepare(`DELETE FROM file_tag WHERE file_name='${fileTag.fileName}' AND tag_name='${tag}';`)
+        .prepare(`DELETE FROM file_tag WHERE file_name='${preparedSqlName(fileTag.fileName)}' AND tag_name='${tag}';`)
         .run();
     }],
 
@@ -173,7 +181,7 @@ const handlersList: [string, (event: Electron.IpcMainInvokeEvent, ...args: any[]
         }
         //: remove tas from db
         db
-          .prepare(`DELETE FROM  file_tag WHERE file_name = '${file.fileName}';`)
+          .prepare(`DELETE FROM file_tag WHERE file_name = '${preparedSqlName(file.fileName)}';`)
           .run();
 
         //: remove file
@@ -238,7 +246,27 @@ const handlersList: [string, (event: Electron.IpcMainInvokeEvent, ...args: any[]
       writeOptions(newOptions);
 
       return newOptions.drivers;
-    }]
+    }],
+
+  ['tag-list-all', (e, selectedDriver: Driver, limit: null | number = null) => {
+    const db = getDB(selectedDriver);
+    const tagCount: { tagName: string, c: number }[] = db.prepare(`
+    SELECT 
+      tag_name AS tagName, COUNT(tag_name)AS c 
+    FROM file_tag
+    WHERE tag_name IN (
+      SELECT DISTINCT tag_name FROM file_tag WHERE tag_name NOT LIKE ':%'
+    ) GROUP BY tag_name ORDER BY c DESC ${limit ? 'LIMIT ' + limit : ''};`).all();
+
+    const allCount: number = db.prepare(`SELECT COUNT(DISTINCT file_name) AS count FROM file_tag;`).get()['count'];
+    const allCount2: number = tagCount.reduce((sum, v) => sum + v.c, 0);
+
+    const tagPercentage: { tagName: string, c: number, p: number, p2: number }[] = tagCount
+      .map(v => ({ ...v, p: v.c * 100 / allCount, p2: v.c * 100 / allCount2 }));
+
+    return { tagPercentage, allCount, allCount2 };
+
+  }]
 ];
 
 //: register all handlers

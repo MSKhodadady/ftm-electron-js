@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, readdirSync } from "fs";
 import { configPath } from './constants';
 
 import Database from "better-sqlite3";
-import { getOptions } from "./utils";
+import { getOptions, preparedSqlName } from "./utils";
 import { Driver } from "../../common/types";
 
 export const preRunSetup = () => {
@@ -44,7 +44,7 @@ export const initDriver = ({ path }: Driver) => {
     if (dirNet.isFile()) {
       db
         .prepare(`INSERT OR IGNORE ${'\n'
-          } INTO file_tag (file_name, tag_name) VALUES ('${dirNet.name
+          } INTO file_tag (file_name, tag_name) VALUES ('${preparedSqlName(dirNet.name)
           }', ':EXISTS:');`).run();
     }
   });

@@ -3,7 +3,6 @@ import React, { useContext, useRef, useState } from 'react';
 import { Button } from "primereact/button";
 import { Messages } from "primereact/messages";
 import { Checkbox } from "primereact/checkbox";
-import { ipcRenderer } from 'electron';
 
 import { DriverContext } from '../contexts/DriverContext';
 import { TagAutoComplete } from './TagAutoComplete';
@@ -28,10 +27,10 @@ export const ImportFile = (p: Props) => {
   const msgRef = useRef<Messages | null>(null);
 
   const chooseFile = () => {
-    ipcRenderer.invoke('choose-file').then((v: Electron.OpenDialogReturnValue) => {
+    window.handler.invoke('choose-file').then((v: Electron.OpenDialogReturnValue) => {
       if (!v.canceled)
         setSelectedFiles(
-          v.filePaths.map(filePath => {
+          v.filePaths.map((filePath: string) => {
             const fileName = filePath.replace(/^.*[\\\/]/, '');
             return { fileName, path: filePath, tagList: [] };
           })
@@ -49,7 +48,7 @@ export const ImportFile = (p: Props) => {
         severity: 'error', summary: 'Please select some file'
       });
     } else {
-      await ipcRenderer.invoke('import-files',
+      await window.handler.invoke('import-files',
         selectedDriver,
         selectedFiles.map(f => ({
           ...f,

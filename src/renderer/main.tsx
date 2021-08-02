@@ -25,6 +25,16 @@ document.body.appendChild(root);
 
 ReactDOM.render(<Contexts><App /></Contexts>, root);
 
+declare global {
+    //: injected from 'preload.js'
+    interface Window { handler: { invoke: (channel: string, ...args: any[]) => Promise<any> } }
+
+    //: injected from 'parcel'
+    interface NodeModule {
+        hot: any
+    }
+}
+
 if (module.hot) {
     module.hot.accept();
 }
