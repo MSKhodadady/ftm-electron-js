@@ -143,8 +143,8 @@ export const DriverChoose = (props: Props) => {
       }
 
       {dialogDispatch()}
-      <Button onClick={e => window.handler.invoke('tag-list-all', driverState.selectedDriver, 50).then(console.log)}
-        label="tag-list-all" />
+      {/* <Button onClick={e => window.handler.invoke('tag-list-all', driverState.selectedDriver, 50).then(console.log)}
+        label="tag-list-all" /> */}
     </div>
   );
 }

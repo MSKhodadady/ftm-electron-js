@@ -18,7 +18,7 @@ export const useFileList = () => {
   const [page, setPage] = useState<number>(0);
   const [filterTags, setFilterTags] = useState<string[]>([]);
 
-  const limit = 1000;
+  const limit = 100;
   const offset = limit * page;
 
   const refreshFileList = (setLoadMoreButtonLabel:
