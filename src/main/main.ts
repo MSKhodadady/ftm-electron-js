@@ -21,7 +21,7 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'main.html'))
   }
 
-  mainWindow.maximize();
+  // mainWindow.maximize();
 
   //: load extension
   if (process.env.NODE_ENV = 'development') {

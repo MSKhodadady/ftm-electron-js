@@ -8,6 +8,7 @@ import { configPath } from './constants';
 
 import Database from "better-sqlite3";
 import { getOptions, preparedSqlName } from "./utils";
+import path from 'path';
 
 export const preRunSetup = () => {
   if (!existsSync(configPath())) {
@@ -17,13 +18,14 @@ export const preRunSetup = () => {
   getOptions().drivers.forEach(initDriver);
 }
 
-export const initDriver = ({ path }: Driver) => {
-  const configFolder = path + '/.ftm';
+export const initDriver = ({ path: driverPath }: Driver) => {
+  const configFolder = path.resolve(driverPath, '.ftm');
 
   if (!existsSync(configFolder))
     mkdirSync(configFolder);
 
-  const dbPath = configFolder + '/data.db';
+  // const dbPath = configFolder + '/data.db';
+  const dbPath = path.resolve(configFolder, 'data.db');
   if (!existsSync(dbPath)) {
     const db = new Database(dbPath);
 
@@ -36,7 +38,7 @@ export const initDriver = ({ path }: Driver) => {
         );`);
   }
 
-  const filesList = readdirSync(path, { withFileTypes: true });
+  const filesList = readdirSync(driverPath, { withFileTypes: true });
 
   const db = new Database(dbPath);
 

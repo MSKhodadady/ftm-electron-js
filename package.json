@@ -11,6 +11,7 @@
     "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.5",
     "concurrently": "^7.1.0",
+    "cross-env": "^7.0.3",
     "electron": "^18.0.4",
     "electron-builder": "^23.0.3",
     "electron-devtools-installer": "^3.1.1",
@@ -22,14 +23,16 @@
   },
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "dev:main": "NODE_ENV=\"development\" electron src/main/entry.js --inspect",
+    "dev:main": "cross-env NODE_ENV=\"development\" electron src/main/entry.js --inspect",
     "dev:renderer": "parcel ./src/renderer/main.html",
     "dev": "concurrently \"yarn dev:main\" \"yarn dev:renderer\" -n \"main,renderer\" -p name",
     "build:renderer": "parcel build",
     "build:main": "tsc -p src/main/tsconfig.json --outDir out/main",
     "build:app": "electron-builder build -l",
+    "build:app:win": "electron-builder build -w",
     "build:clean": "rm -r dist out",
-    "build": "yarn build:clean; yarn build:main && yarn build:renderer && yarn build:app"
+    "build": "yarn build:clean; yarn build:main && yarn build:renderer && yarn build:app",
+    "build:win": "yarn build:main && yarn build:renderer && yarn build:app:win"
   },
   "dependencies": {
     "better-sqlite3": "^7.4.0",
@@ -75,6 +78,9 @@
     ],
     "linux": {
       "target": "AppImage"
+    },
+    "win": {
+      "target": "portable"
     }
   }
 }

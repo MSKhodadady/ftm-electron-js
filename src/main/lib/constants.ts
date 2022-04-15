@@ -1,4 +1,9 @@
 import { app } from 'electron';
+import path from 'path';
 
-export const configPath = () => (app.getPath('home') + '/.ftm');
-export const optionsPath = () => (configPath() + '/options.json');
+export const configPath = () => (path.resolve(
+    app.getPath('home'), '.ftm'
+));
+export const optionsPath = () => (path.resolve(
+    configPath(), 'options.json'
+));

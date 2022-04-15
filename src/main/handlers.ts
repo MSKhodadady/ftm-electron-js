@@ -8,8 +8,7 @@ import fs from "fs";
 import { initDriver } from "./lib/preRunConfig";
 import { deduplicate, EXISTS } from "./common/lib";
 
-const getDB = (selectedDriver: Driver): DBType => new Database(selectedDriver.path + '/.ftm/data.db');
-
+const getDB = (selectedDriver: Driver): DBType => new Database(path.resolve(selectedDriver.path, '.ftm', 'data.db'));
 type DBFileTagRecord = {
   file_name: string,
   tag_name: string
@@ -29,7 +28,7 @@ const handlersList: [string, (event: Electron.IpcMainInvokeEvent, ...args: any[]
 
   ['tag-list',
     (event, query, selectedDriver: Driver) => {
-      const dbPath = selectedDriver.path + '/.ftm/data.db';
+      const dbPath = path.resolve(selectedDriver.path, '.ftm', 'data.db');
       const db = new Database(dbPath);
 
       const dbQuery = `SELECT DISTINCT tag_name FROM file_tag WHERE tag_name LIKE '${query + '%'}';`;
@@ -47,7 +46,7 @@ const handlersList: [string, (event: Electron.IpcMainInvokeEvent, ...args: any[]
 
   ['save-file',
     async (event, selectedPaths: string[], selectedTags: string[] | [], selectedDriver: Driver, moveFile: boolean) => {
-      const dbPath = selectedDriver.path + '/.ftm/data.db';
+      const dbPath = path.resolve(selectedDriver.path, '.ftm', 'data.db');
       const db = new Database(dbPath);
 
       for (const selectedPath of selectedPaths) {

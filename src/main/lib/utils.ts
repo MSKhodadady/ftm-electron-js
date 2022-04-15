@@ -1,4 +1,6 @@
 import fs from 'fs';
+import { existsSync } from 'fs';
+import { writeFileSync } from 'original-fs';
 import { optionsPath } from "./constants";
 
 export interface Options {
@@ -6,6 +8,10 @@ export interface Options {
 }
 
 export function getOptions(): Options {
+  const op = optionsPath();
+  if (!existsSync(op)) {
+    writeFileSync(op, "{\"drivers\": []}", { encoding: "utf-8" });
+  }
   return JSON.parse(
     fs.readFileSync(optionsPath(), { encoding: 'utf-8' })
   );
