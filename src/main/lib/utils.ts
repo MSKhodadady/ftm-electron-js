@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { Driver } from '../../common/types';
 import { optionsPath } from "./constants";
 
 export interface Options {

@@ -1,7 +1,6 @@
 import { AutoComplete } from "primereact/autocomplete";
 import React, { useContext, useState } from "react";
-import { deduplicate } from "../../common/lib";
-import { UseState } from "../../common/types";
+import { deduplicate } from "../../main/common/lib";
 import { DriverContext } from "../contexts/DriverContext";
 
 interface Props {

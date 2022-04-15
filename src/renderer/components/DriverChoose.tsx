@@ -3,7 +3,6 @@ import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { Menubar } from 'primereact/menubar';
 import React, { useContext, useEffect, useState } from 'react';
-import { Driver } from '../../common/types';
 import { DriverContext } from '../contexts/DriverContext';
 
 interface Props {

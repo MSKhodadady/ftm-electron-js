@@ -1,6 +1,5 @@
 import { InputText } from 'primereact/inputtext';
 import React, { useContext, useState } from 'react';
-import { FileTag, UseState } from "../../common/types";
 import { DriverContext } from '../contexts/DriverContext';
 import { Checkbox } from 'primereact/checkbox';
 

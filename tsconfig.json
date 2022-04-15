@@ -1,33 +1,5 @@
 {
-    "compilerOptions": {
-        "module": "ES2020",
-        "target": "ES2020",
-        "sourceMap": true,
-        "jsx": "react",
-        "allowJs": true,
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-        "strictNullChecks": true,
-        "noImplicitAny": true,
-        "types": [
-            "electron"
-        ]
-    },
-    "typeAcquisition": {
-        "exclude": [
-            "webpack"
-        ],
-        "enable": false
-    },
     "include": [
-        "./src/common/**/*",
-        "./src/renderer/**/*"
-    ],
-    "exclude": [
-        "./src/main/**/*",
-        "./configs/**/*",
-        "./node_modules/**/*",
-        "./dist/**/*",
-        "./mainRunner.js"
+        "src"
     ]
 }

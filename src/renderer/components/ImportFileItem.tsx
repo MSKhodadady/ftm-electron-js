@@ -1,5 +1,4 @@
 import React from 'react';
-import { MoveableFileTag } from '../../common/types';
 import { TagAutoComplete } from './TagAutoComplete';
 
 interface Props {

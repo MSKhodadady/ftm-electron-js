@@ -1,28 +1,35 @@
 
 import { app, BrowserWindow, globalShortcut } from "electron";
-import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import path from 'path';
+import { watch } from 'fs/promises';
 
 //: pre run configs
 import { preRunSetup } from './lib/preRunConfig';
 preRunSetup();
 
 function createWindow() {
-  const win = new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     webPreferences: {
       preload: path.resolve(__dirname, 'preload.js')
     }
   });
 
   //: TODO: load this file in production
-  // win.loadFile(path.resolve('.', 'dist', 'renderer', 'main.html'));
-  win.loadURL('http://localhost:1234/');
+  if (process.env.NODE_ENV == 'development') {
+    mainWindow.loadURL('http://localhost:1234');
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'main.html'))
+  }
 
-  win.maximize();
+  mainWindow.maximize();
 
   //: load extension
-  installExtension(REACT_DEVELOPER_TOOLS).then(name => console.log(`extension added: ${name}`))
+  if (process.env.NODE_ENV = 'development') {
+    const installExtension = require('electron-devtools-installer');
+    const { REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer');
+    installExtension(REACT_DEVELOPER_TOOLS).then(name => console.log(`extension added: ${name}`))
     .catch(err => `error adding 'react devtool extension, err: ${err}`);
+  }
 }
 
 app.whenReady().then(() => {
@@ -32,20 +39,6 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0)
       createWindow();
   });
-
-  //: hot reload handlers module {
-  //: TODO: this code is just for development!
-  const reloadKeyboardKey = 'CmdOrCtrl+Shift+S'
-  const ret = globalShortcut.register(reloadKeyboardKey, () => {
-    console.log(reloadKeyboardKey + ' pressed, handlers module reloaded!');
-    //: remove the module from cache
-    delete require.cache[require.resolve('./lib/handlers.ts')];
-    //: reload module
-    require('./lib/handlers').registerHandlers();
-  });
-  if (!ret) console.error(reloadKeyboardKey + ' not registered!');
-  else console.log(reloadKeyboardKey + ' registered!');
-  //: }
 });
 
 app.on('window-all-closed', () => {
@@ -54,4 +47,23 @@ app.on('window-all-closed', () => {
 });
 
 //: handlers
-require('./lib/handlers').registerHandlers();
+require('./handlers').registerHandlers();
+if (process.env.NODE_ENV == 'development') {
+  (async () => {
+    const handlersFile = require.resolve('./handlers');
+    const watcher = watch(handlersFile);
+
+    for await (const event of watcher) {
+      if (event.eventType == 'change') {
+        console.log("handlers module changed. RELOAD!");
+        //: remove the module from cache
+        delete require.cache[handlersFile];
+        //: reload module
+        const { registerHandlers } = require('./handlers');
+        //: it is possible when we save file multiple time afterward, the file doesn't load correctly.
+        //: So we check for it.
+        if (registerHandlers) registerHandlers();
+      }
+    }
+  })();
+}

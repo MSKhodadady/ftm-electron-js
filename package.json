@@ -2,38 +2,34 @@
   "name": "my-app",
   "version": "0.1.0",
   "description": "File Tag Management",
+  "main": "out/main/main.js",
   "author": "Sadeq",
   "private": true,
   "devDependencies": {
     "@types/better-sqlite3": "^5.4.1",
     "@types/electron-devtools-installer": "^2.2.0",
-    "@types/node": "^14.14.28",
     "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.5",
-    "clean-webpack-plugin": "^3.0.0",
-    "css-loader": "^5.0.2",
-    "electron": "^12.0.2",
+    "concurrently": "^7.1.0",
+    "electron": "^18.0.4",
+    "electron-builder": "^23.0.3",
     "electron-devtools-installer": "^3.1.1",
-    "electron-rebuild": "^2.3.5",
-    "html-webpack-plugin": "^5.1.0",
     "parcel": "^2.4.1",
     "postcss": "^8.2.12",
-    "postcss-loader": "^5.2.0",
-    "style-loader": "^2.0.0",
-    "tailwindcss": "^2.1.1",
-    "ts-loader": "^8.0.17",
-    "typescript": "^4.1.5",
-    "webpack": "^5.22.0",
-    "webpack-cli": "^4.5.0",
-    "webpack-dev-server": "^3.11.2"
+    "tailwindcss": "^2.2.16",
+    "tsc": "^2.0.4",
+    "typescript": "^4.1.5"
   },
   "scripts": {
-    "after-install-native": "electron-rebuild -f",
-    "build:renderer": "webpack --config ./configs/renderer/webpack.config.js",
-    "run:main": "electron mainRunner.js --inspect",
-    "run:renderer": "webpack serve --config ./configs/renderer/webpack.hot.js",
-    "parcel:serve": "parcel serve ./src/renderer/main.html --target app",
-    "parcel:build": "parcel build ./src/renderer/main.html --target app"
+    "postinstall": "electron-builder install-app-deps",
+    "dev:main": "NODE_ENV=\"development\" electron src/main/entry.js --inspect",
+    "dev:renderer": "parcel ./src/renderer/main.html",
+    "dev": "concurrently \"yarn dev:main\" \"yarn dev:renderer\" -n \"main,renderer\" -p name",
+    "build:renderer": "parcel build",
+    "build:main": "tsc -p src/main/tsconfig.json --outDir out/main",
+    "build:app": "electron-builder build -l",
+    "build:clean": "rm -r dist out",
+    "build": "yarn build:clean; yarn build:main && yarn build:renderer && yarn build:app"
   },
   "dependencies": {
     "better-sqlite3": "^7.4.0",
@@ -45,13 +41,40 @@
     "react-transition-group": "^4.4.1",
     "ts-node": "^9.1.1"
   },
+  "-- targets for what?": "parcel",
   "targets": {
-    "app": {
-      "context": "browser",
-      "distDir": "dist/renderer",
+    "main": false,
+    "default": {
+      "publicUrl": "./",
+      "source": "./src/renderer/main.html",
+      "distDir": "out/renderer",
       "sourceMap": {
         "inline": true
       }
+    }
+  },
+  "-- build for what?": "electron-builder",
+  "build": {
+    "appId": "com.you.your-app",
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}",
+      "!.parcel-cache/**/*",
+      "!.dist/**/*",
+      "!src/**/*"
+    ],
+    "linux": {
+      "target": "AppImage"
     }
   }
 }

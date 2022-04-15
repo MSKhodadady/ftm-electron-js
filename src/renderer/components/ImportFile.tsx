@@ -7,8 +7,7 @@ import { Checkbox } from "primereact/checkbox";
 import { DriverContext } from '../contexts/DriverContext';
 import { TagAutoComplete } from './TagAutoComplete';
 import { ImportFileItem } from './ImportFileItem';
-import { deduplicate, EXISTS } from '../../common/lib';
-import { MoveableFileTag } from '../../common/types';
+import { deduplicate, EXISTS } from '../../main/common/lib';
 
 interface Props {
   className?: string

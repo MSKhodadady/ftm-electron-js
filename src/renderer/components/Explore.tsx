@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 
-import { FileTag } from '../../common/types';
-
 import { DriverContext } from '../contexts/DriverContext';
 import { FileItem } from './FileItem';
 import { Button } from 'primereact/button';
 import { Menubar } from 'primereact/menubar';
-import { MenuItem } from 'primereact/components/menuitem/MenuItem';
 import { Dialog } from 'primereact/dialog';
 import { TagAutoComplete } from './TagAutoComplete';
-import { deduplicate } from '../../common/lib';
+import { deduplicate } from '../../main/common/lib';
+import { MenuItem } from 'primereact/menuitem';
 
 export const useFileList = () => {
   const { driverState: { selectedDriver } } = useContext(DriverContext);

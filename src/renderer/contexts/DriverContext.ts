@@ -1,5 +1,4 @@
 import { createContext, useReducer } from "react";
-import { Driver } from "../../common/types";
 
 //: types
 export type DriverState = {

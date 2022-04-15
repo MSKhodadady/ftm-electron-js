@@ -1,13 +1,13 @@
 /* 
  * This file is used for configuring system, before the app runs
 */
+/// <reference path="../../types/main.d.ts" />
 
 import { existsSync, mkdirSync, readdirSync } from "fs";
 import { configPath } from './constants';
 
 import Database from "better-sqlite3";
 import { getOptions, preparedSqlName } from "./utils";
-import { Driver } from "../../common/types";
 
 export const preRunSetup = () => {
   if (!existsSync(configPath())) {

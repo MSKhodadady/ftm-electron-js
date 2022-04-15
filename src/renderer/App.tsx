@@ -1,13 +1,12 @@
 import React, { useState, useContext } from 'react';
 
-import { Driver, UseState, } from "../common/types";
 import { DriverChoose } from './components/DriverChoose';
 import { ImportFile } from './components/ImportFile';
 import { Explore } from './components/Explore';
 import { DriverContext } from './contexts/DriverContext';
 
-import { MenuItem } from 'primereact/components/menuitem/MenuItem';
 import { Menubar } from "primereact/menubar";
+import { MenuItem } from 'primereact/menuitem';
 
 const App = () => {
 

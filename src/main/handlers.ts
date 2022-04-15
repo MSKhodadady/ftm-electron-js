@@ -1,13 +1,12 @@
 import { ipcMain, dialog, shell } from "electron";
 import Database from 'better-sqlite3';
 import { Database as DBType } from "better-sqlite3";
-import { Driver, FileTag, MoveableFileTag } from "../../common/types";
-import { deduplicate, EXISTS } from "../../common/lib";
 
 import path from 'path';
-import { getOptions, Options, preparedSqlName, writeOptions } from "./utils";
+import { getOptions, Options, preparedSqlName, writeOptions } from "./lib/utils";
 import fs from "fs";
-import { initDriver } from "./preRunConfig";
+import { initDriver } from "./lib/preRunConfig";
+import { deduplicate, EXISTS } from "./common/lib";
 
 const getDB = (selectedDriver: Driver): DBType => new Database(selectedDriver.path + '/.ftm/data.db');
 
